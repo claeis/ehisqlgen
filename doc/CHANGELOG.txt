@@ -1,0 +1,4 @@
+ehisqlgen 1.1.0 (2015-09-xx)
+---------------------------
+- DbColUuid added to support UUID in postgresql
+- DbColumn.defaultValue added to support DEFAULT in postgresql

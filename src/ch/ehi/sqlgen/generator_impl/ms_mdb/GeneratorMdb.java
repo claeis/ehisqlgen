@@ -268,6 +268,9 @@ public class GeneratorMdb implements Generator {
 		}else if(column instanceof DbColId){
 			type="dbLong";
 			size="";
+		}else if(column instanceof DbColUuid){
+			type="dbText";
+			size=", 36";
 		}else if(column instanceof DbColNumber){
 			type="dbLong";
 			size="";

@@ -60,6 +60,8 @@ public class GeneratorMdb extends GeneratorJdbc {
 			type="BINARY";
 		}else if(column instanceof DbColId){
 			type="LONG";
+		}else if(column instanceof DbColUuid){
+			type="TEXT(36)";
 		}else if(column instanceof DbColNumber){
 			DbColNumber col=(DbColNumber)column;
 			type="LONG";

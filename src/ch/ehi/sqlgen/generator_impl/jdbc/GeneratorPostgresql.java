@@ -73,6 +73,8 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 			return;
 		}else if(column instanceof DbColId){
 			type="integer";
+		}else if(column instanceof DbColUuid){
+			type="uuid";
 		}else if(column instanceof DbColNumber){
 			DbColNumber col=(DbColNumber)column;
 			type="integer";
@@ -87,12 +89,15 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 			type="text";
 		}
 		String isNull=column.isNotNull()?"NOT NULL":"NULL";
-		String primaryKey="";
 		if(column.isPrimaryKey()){
 			isNull="PRIMARY KEY";
 		}
+		String defaultValue="";
+		if(column.getDefaultValue()!=null){
+			defaultValue=" DEFAULT "+column.getDefaultValue();
+		}
 		String name=column.getName();
-		out.write(getIndent()+colSep+name+" "+type+" "+isNull+newline());
+		out.write(getIndent()+colSep+name+" "+type+" "+isNull+defaultValue+newline());
 		colSep=",";
 	}
 	private ArrayList geomColumns=null;

@@ -30,6 +30,7 @@ public class DbColumn
 {
 	private String comment=null;
   private String name;
+  private String defaultValue=null;
 
   /** get current value of name
    *  @see #setName
@@ -131,6 +132,16 @@ public class DbColumn
 
 	public String getComment() {
 		return comment;
+	}
+
+	public String getDefaultValue() {
+		return defaultValue;
+	}
+	/** sets the SQL default value of that column
+	 * @param defaultValue such as "10" or "nextval()"
+	 */
+	public void setDefaultValue(String defaultValue) {
+		this.defaultValue = defaultValue;
 	}
 	
 }

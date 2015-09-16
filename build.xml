@@ -9,7 +9,7 @@
   <target name="init">
     <!-- Create the time stamp -->
     <tstamp/>
-    <!-- <property name="versionfile" value="${src}/ch/ehi/uml2db/Version.properties"/> -->
+    <property name="versionfile" value="${src}/ch/ehi/ehisqlgen/Version.properties"/>
     <property name="projectjar" value="${build}/jar/${ant.project.name}.jar"/>
     <!-- Create the build directory structure used by compile -->
     <mkdir dir="${build}"/>
