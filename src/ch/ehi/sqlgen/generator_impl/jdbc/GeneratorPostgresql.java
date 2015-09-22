@@ -25,9 +25,7 @@ package ch.ehi.sqlgen.generator_impl.jdbc;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Iterator;
-
 import java.io.IOException;
-
 import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.SQLException;
@@ -69,7 +67,7 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 			type="decimal("+Integer.toString(col.getSize())+","+Integer.toString(col.getPrecision())+")";
 		}else if(column instanceof DbColGeometry){
 			// just collect it; process it later
-			geomColumns.add(column);
+			geomColumns.add((DbColGeometry) column);
 			return;
 		}else if(column instanceof DbColId){
 			type="integer";
@@ -92,18 +90,37 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 		if(column.isPrimaryKey()){
 			isNull="PRIMARY KEY";
 		}
+		String sep=" ";
 		String defaultValue="";
 		if(column.getDefaultValue()!=null){
-			defaultValue=" DEFAULT "+column.getDefaultValue();
+			defaultValue=sep+"DEFAULT "+column.getDefaultValue();
+			sep=" ";
+		}
+		String foreignKey="";
+		if(column.getReferencedTable()!=null){
+			foreignKey=sep+"REFERENCES "+column.getReferencedTable();
+			if(column.getOnUpdateAction()!=null){
+				foreignKey=foreignKey+" ON UPDATE "+column.getOnUpdateAction();
+			}
+			if(column.getOnDeleteAction()!=null){
+				foreignKey=foreignKey+" ON DELETE "+column.getOnDeleteAction();
+			}
+			sep=" ";
+		}
+		if(column.isIndex() || (createGeomIdx && column instanceof DbColGeometry)){
+			// just collect it; process it later
+			indexColumns.add(column);
 		}
 		String name=column.getName();
-		out.write(getIndent()+colSep+name+" "+type+" "+isNull+defaultValue+newline());
+		out.write(getIndent()+colSep+name+" "+type+" "+isNull+defaultValue+foreignKey+newline());
 		colSep=",";
 	}
-	private ArrayList geomColumns=null;
+	private ArrayList<DbColumn> indexColumns=null;
+	private ArrayList<DbColGeometry> geomColumns=null;
 	public void visit1TableBegin(DbTable tab) throws IOException {
 		super.visit1TableBegin(tab);
-		geomColumns=new ArrayList();
+		geomColumns=new ArrayList<DbColGeometry>();
+		indexColumns=new ArrayList<DbColumn>();
 	}
 
 	public void visit1TableEnd(DbTable tab) throws IOException {
@@ -116,9 +133,7 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 		
 		
 		
-		Iterator geoi=geomColumns.iterator();
-		while(geoi.hasNext()){
-			DbColGeometry geo=(DbColGeometry)geoi.next();
+		for(DbColGeometry geo:geomColumns){
 			String stmt=null;
 			if(tab.getName().getSchema()!=null){
 				stmt="SELECT AddGeometryColumn(\'"+tab.getName().getSchema().toLowerCase()+"\',\'"+tab.getName().getName().toLowerCase()+"\',\'"
@@ -138,14 +153,7 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 				
 			}
 			addCreateLine(new Stmt(stmt));
-			
-			
-			String idxstmt=null;
-			if(createGeomIdx){
-				idxstmt="CREATE INDEX "+tab.getName().getName().toLowerCase()+"_"+geo.getName().toLowerCase()+"_idx ON "+sqlTabName.toLowerCase()+" USING GIST ( "+geo.getName().toLowerCase()+" )";
-				addCreateLine(new Stmt(idxstmt));
-			}
-			
+						
 			String dropstmt=null;
 			if(tab.getName().getSchema()!=null){
 				dropstmt="SELECT DropGeometryColumn(\'"+tab.getName().getSchema().toLowerCase()+"\',\'"+tab.getName().getName().toLowerCase()+"\',\'"
@@ -164,10 +172,6 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 						dbstmt = conn.createStatement();
 						EhiLogger.traceBackendCmd(stmt);
 						dbstmt.execute(stmt);
-						if(createGeomIdx){
-							EhiLogger.traceBackendCmd(idxstmt);
-							dbstmt.execute(idxstmt);
-						}
 					}finally{
 						dbstmt.close();
 					}
@@ -179,6 +183,35 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 			}
 		}
 		geomColumns=null;
+
+		for(DbColumn idxcol:indexColumns){
+			
+			String idxstmt=null;
+			if(idxcol instanceof DbColGeometry){
+				idxstmt="CREATE INDEX "+tab.getName().getName().toLowerCase()+"_"+idxcol.getName().toLowerCase()+"_idx ON "+sqlTabName.toLowerCase()+" USING GIST ( "+idxcol.getName().toLowerCase()+" )";
+			}else{
+				idxstmt="CREATE INDEX "+tab.getName().getName().toLowerCase()+"_"+idxcol.getName().toLowerCase()+"_idx ON "+sqlTabName.toLowerCase()+" ( "+idxcol.getName().toLowerCase()+" )";
+			}
+			addCreateLine(new Stmt(idxstmt));
+			
+			if(!tableExists){
+				Statement dbstmt = null;
+				try{
+					try{
+						dbstmt = conn.createStatement();
+						EhiLogger.traceBackendCmd(idxstmt);
+						dbstmt.execute(idxstmt);
+					}finally{
+						dbstmt.close();
+					}
+				}catch(SQLException ex){
+					IOException iox=new IOException("failed to add index on column "+tab.getName()+"."+idxcol.getName());
+					iox.initCause(ex);
+					throw iox;
+				}
+			}
+		}
+		indexColumns=null;
 		
 		String cmt=tab.getComment();
 		if(cmt!=null){
