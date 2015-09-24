@@ -31,7 +31,7 @@ public class DbColumn
 	private String comment=null;
   private String name;
   private String defaultValue=null;
-  private String referencedTable=null;
+  private DbTableName referencedTable=null;
   private String onDeleteAction=null;
   private String onUpdateAction=null;
   private boolean index=false;
@@ -148,14 +148,14 @@ public class DbColumn
 		this.defaultValue = defaultValue;
 	}
 
-	public String getReferencedTable() {
+	public DbTableName getReferencedTable() {
 		return referencedTable;
 	}
 
 	/** sets the SQL name of the referenced table
 	 * @param referencedTable such as "parcel". If null, no table referenced by this column.
 	 */
-	public void setReferencedTable(String referencedTable) {
+	public void setReferencedTable(DbTableName referencedTable) {
 		this.referencedTable = referencedTable;
 	}
 

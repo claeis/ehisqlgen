@@ -18,6 +18,9 @@ public class DbTableName {
 	public String getSchema() {
 		return schema;
 	}
+	public String getQName() {
+		return (schema==null?"":schema+".")+ name;
+	}
 	public String toString() {
 		return (schema==null?"":schema+".")+ name;
 	}

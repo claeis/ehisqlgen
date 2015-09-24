@@ -96,23 +96,12 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 			defaultValue=sep+"DEFAULT "+column.getDefaultValue();
 			sep=" ";
 		}
-		String foreignKey="";
-		if(column.getReferencedTable()!=null){
-			foreignKey=sep+"REFERENCES "+column.getReferencedTable();
-			if(column.getOnUpdateAction()!=null){
-				foreignKey=foreignKey+" ON UPDATE "+column.getOnUpdateAction();
-			}
-			if(column.getOnDeleteAction()!=null){
-				foreignKey=foreignKey+" ON DELETE "+column.getOnDeleteAction();
-			}
-			sep=" ";
-		}
 		if(column.isIndex() || (createGeomIdx && column instanceof DbColGeometry)){
 			// just collect it; process it later
 			indexColumns.add(column);
 		}
 		String name=column.getName();
-		out.write(getIndent()+colSep+name+" "+type+" "+isNull+defaultValue+foreignKey+newline());
+		out.write(getIndent()+colSep+name+" "+type+" "+isNull+defaultValue+newline());
 		colSep=",";
 	}
 	private ArrayList<DbColumn> indexColumns=null;
@@ -309,5 +298,52 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 			default:
 				throw new IllegalArgumentException();
 		 }
+	}
+
+	@Override
+	public void visitTableBeginConstraint(DbTable dbTab) throws IOException {
+		super.visitTableBeginConstraint(dbTab);
+		
+		String sqlTabName=dbTab.getName().getQName();
+		for(Iterator dbColi=dbTab.iteratorColumn();dbColi.hasNext();){
+			DbColumn dbCol=(DbColumn) dbColi.next();
+			if(dbCol.getReferencedTable()!=null){
+				String createstmt=null;
+				String action="";
+				if(dbCol.getOnUpdateAction()!=null){
+					action=action+" ON UPDATE "+dbCol.getOnUpdateAction();
+				}
+				if(dbCol.getOnDeleteAction()!=null){
+					action=action+" ON DELETE "+dbCol.getOnDeleteAction();
+				}
+				String constraintName=dbTab.getName().getName()+"_"+dbCol.getName()+"_fkey";
+				//  ALTER TABLE ce.classb1 ADD CONSTRAINT classb1_t_id_fkey FOREIGN KEY ( t_id ) REFERENCES ce.classa1;
+				createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" FOREIGN KEY ( "+dbCol.getName()+" ) REFERENCES "+dbCol.getReferencedTable().getQName()+action;
+				addCreateLine(new Stmt(createstmt));
+				
+				//  ALTER TABLE ce.classb1 DROP CONSTRAINT classb1_t_id_fkey;
+				String dropstmt=null;
+				dropstmt="ALTER TABLE "+sqlTabName+" DROP CONSTRAINT "+constraintName;
+				addDropLine(new Stmt(dropstmt));
+				
+				if(tableCreated(dbTab.getName())){
+					Statement dbstmt = null;
+					try{
+						try{
+							dbstmt = conn.createStatement();
+							EhiLogger.traceBackendCmd(createstmt);
+							dbstmt.execute(createstmt);
+						}finally{
+							dbstmt.close();
+						}
+					}catch(SQLException ex){
+						IOException iox=new IOException("failed to add fk constraint to table "+dbTab.getName());
+						iox.initCause(ex);
+						throw iox;
+					}
+				}
+				
+			}
+		}
 	}
 }
