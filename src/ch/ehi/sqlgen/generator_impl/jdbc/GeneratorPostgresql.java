@@ -318,7 +318,7 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 				}
 				String constraintName=dbTab.getName().getName()+"_"+dbCol.getName()+"_fkey";
 				//  ALTER TABLE ce.classb1 ADD CONSTRAINT classb1_t_id_fkey FOREIGN KEY ( t_id ) REFERENCES ce.classa1;
-				createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" FOREIGN KEY ( "+dbCol.getName()+" ) REFERENCES "+dbCol.getReferencedTable().getQName()+action;
+				createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" FOREIGN KEY ( "+dbCol.getName()+" ) REFERENCES "+dbCol.getReferencedTable().getQName()+action+" DEFERRABLE INITIALLY DEFERRED";
 				addCreateLine(new Stmt(createstmt));
 				
 				//  ALTER TABLE ce.classb1 DROP CONSTRAINT classb1_t_id_fkey;
