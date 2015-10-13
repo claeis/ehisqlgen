@@ -54,6 +54,7 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 		String type="";
 		String size="";
 		String notSupported=null;
+		boolean createColNow=true;
 		if(column instanceof DbColBoolean){
 			type="boolean";
 		}else if(column instanceof DbColDateTime){
@@ -68,7 +69,7 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 		}else if(column instanceof DbColGeometry){
 			// just collect it; process it later
 			geomColumns.add((DbColGeometry) column);
-			return;
+			createColNow=false;
 		}else if(column instanceof DbColId){
 			type="integer";
 		}else if(column instanceof DbColUuid){
@@ -100,9 +101,11 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 			// just collect it; process it later
 			indexColumns.add(column);
 		}
-		String name=column.getName();
-		out.write(getIndent()+colSep+name+" "+type+" "+isNull+defaultValue+newline());
-		colSep=",";
+		if(createColNow){
+			String name=column.getName();
+			out.write(getIndent()+colSep+name+" "+type+" "+isNull+defaultValue+newline());
+			colSep=",";
+		}
 	}
 	private ArrayList<DbColumn> indexColumns=null;
 	private ArrayList<DbColGeometry> geomColumns=null;
