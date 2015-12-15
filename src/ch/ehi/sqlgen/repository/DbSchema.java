@@ -25,6 +25,8 @@
 package ch.ehi.sqlgen.repository;
 // -end- 40503CC70030 package "DbSchema"
 
+import java.util.Iterator;
+
 // -beg- preserve=no 40503CC70030 autoimport "DbSchema"
 import ch.ehi.sqlgen.repository.DbTable;
 // -end- 40503CC70030 autoimport "DbSchema"
@@ -168,7 +170,17 @@ public class DbSchema
 
   // declare/define something only in the code
   // please fill in/modify the following section
-  // -beg- preserve=no 40503CC70030 detail_end "DbSchema"
+  // -beg- preserve=yes 40503CC70030 detail_end "DbSchema"
+	public DbTable findTable(DbTableName structClassSqlName) {
+		Iterator tabi=iteratorTable();
+		while(tabi.hasNext()){
+			DbTable tab=(DbTable)tabi.next();
+			if(tab.getName().equals(structClassSqlName)){
+				return tab;
+			}
+		}
+		return null;
+	}
 
   // -end- 40503CC70030 detail_end "DbSchema"
 
