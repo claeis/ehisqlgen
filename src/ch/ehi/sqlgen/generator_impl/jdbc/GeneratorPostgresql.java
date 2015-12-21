@@ -292,6 +292,8 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 				return "CURVEPOLYGON";
 			case DbColGeometry.MULTICURVE:
 				return "MULTICURVE";
+			case DbColGeometry.MULTISURFACE:
+				return "MULTISURFACE";
 			case DbColGeometry.POLYHEDRALSURFACE:
 				return "POLYHEDRALSURFACE";
 			case DbColGeometry.TIN:
