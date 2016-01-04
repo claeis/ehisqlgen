@@ -9,7 +9,7 @@
   <target name="init">
     <!-- Create the time stamp -->
     <tstamp/>
-    <!-- <property name="versionfile" value="${src}/ch/ehi/uml2db/Version.properties"/> -->
+    <property name="versionfile" value="${src}/ch/ehi/ehisqlgen/Version.properties"/>
     <property name="projectjar" value="${build}/jar/${ant.project.name}.jar"/>
     <!-- Create the build directory structure used by compile -->
     <mkdir dir="${build}"/>
@@ -20,7 +20,7 @@
   <target depends="init" name="compile">
     <!-- Compile the java code from ${src} into ${build}/classes -->
     <mkdir dir="${build}/classes"/>
-    <javac destdir="${build}/classes" includes="**/*.java" excludes="**/bak~/*.java"  source="1.4" target="1.4">
+    <javac destdir="${build}/classes" includes="**/*.java" excludes="**/bak~/*.java"  source="1.6" target="1.6">
       <classpath>
         <pathelement location="lib/ehibasics.jar"/>
       </classpath>

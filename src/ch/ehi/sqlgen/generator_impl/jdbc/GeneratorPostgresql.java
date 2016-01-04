@@ -25,9 +25,7 @@ package ch.ehi.sqlgen.generator_impl.jdbc;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Iterator;
-
 import java.io.IOException;
-
 import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.SQLException;
@@ -56,6 +54,7 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 		String type="";
 		String size="";
 		String notSupported=null;
+		boolean createColNow=true;
 		if(column instanceof DbColBoolean){
 			type="boolean";
 		}else if(column instanceof DbColDateTime){
@@ -69,10 +68,12 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 			type="decimal("+Integer.toString(col.getSize())+","+Integer.toString(col.getPrecision())+")";
 		}else if(column instanceof DbColGeometry){
 			// just collect it; process it later
-			geomColumns.add(column);
-			return;
+			geomColumns.add((DbColGeometry) column);
+			createColNow=false;
 		}else if(column instanceof DbColId){
 			type="integer";
+		}else if(column instanceof DbColUuid){
+			type="uuid";
 		}else if(column instanceof DbColNumber){
 			DbColNumber col=(DbColNumber)column;
 			type="integer";
@@ -87,18 +88,31 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 			type="text";
 		}
 		String isNull=column.isNotNull()?"NOT NULL":"NULL";
-		String primaryKey="";
 		if(column.isPrimaryKey()){
 			isNull="PRIMARY KEY";
 		}
-		String name=column.getName();
-		out.write(getIndent()+colSep+name+" "+type+" "+isNull+newline());
-		colSep=",";
+		String sep=" ";
+		String defaultValue="";
+		if(column.getDefaultValue()!=null){
+			defaultValue=sep+"DEFAULT "+column.getDefaultValue();
+			sep=" ";
+		}
+		if(column.isIndex() || (createGeomIdx && column instanceof DbColGeometry)){
+			// just collect it; process it later
+			indexColumns.add(column);
+		}
+		if(createColNow){
+			String name=column.getName();
+			out.write(getIndent()+colSep+name+" "+type+" "+isNull+defaultValue+newline());
+			colSep=",";
+		}
 	}
-	private ArrayList geomColumns=null;
+	private ArrayList<DbColumn> indexColumns=null;
+	private ArrayList<DbColGeometry> geomColumns=null;
 	public void visit1TableBegin(DbTable tab) throws IOException {
 		super.visit1TableBegin(tab);
-		geomColumns=new ArrayList();
+		geomColumns=new ArrayList<DbColGeometry>();
+		indexColumns=new ArrayList<DbColumn>();
 	}
 
 	public void visit1TableEnd(DbTable tab) throws IOException {
@@ -111,9 +125,7 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 		
 		
 		
-		Iterator geoi=geomColumns.iterator();
-		while(geoi.hasNext()){
-			DbColGeometry geo=(DbColGeometry)geoi.next();
+		for(DbColGeometry geo:geomColumns){
 			String stmt=null;
 			if(tab.getName().getSchema()!=null){
 				stmt="SELECT AddGeometryColumn(\'"+tab.getName().getSchema().toLowerCase()+"\',\'"+tab.getName().getName().toLowerCase()+"\',\'"
@@ -133,14 +145,7 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 				
 			}
 			addCreateLine(new Stmt(stmt));
-			
-			
-			String idxstmt=null;
-			if(createGeomIdx){
-				idxstmt="CREATE INDEX "+tab.getName().getName().toLowerCase()+"_"+geo.getName().toLowerCase()+"_idx ON "+sqlTabName.toLowerCase()+" USING GIST ( "+geo.getName().toLowerCase()+" )";
-				addCreateLine(new Stmt(idxstmt));
-			}
-			
+						
 			String dropstmt=null;
 			if(tab.getName().getSchema()!=null){
 				dropstmt="SELECT DropGeometryColumn(\'"+tab.getName().getSchema().toLowerCase()+"\',\'"+tab.getName().getName().toLowerCase()+"\',\'"
@@ -159,10 +164,6 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 						dbstmt = conn.createStatement();
 						EhiLogger.traceBackendCmd(stmt);
 						dbstmt.execute(stmt);
-						if(createGeomIdx){
-							EhiLogger.traceBackendCmd(idxstmt);
-							dbstmt.execute(idxstmt);
-						}
 					}finally{
 						dbstmt.close();
 					}
@@ -174,6 +175,35 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 			}
 		}
 		geomColumns=null;
+
+		for(DbColumn idxcol:indexColumns){
+			
+			String idxstmt=null;
+			if(idxcol instanceof DbColGeometry){
+				idxstmt="CREATE INDEX "+tab.getName().getName().toLowerCase()+"_"+idxcol.getName().toLowerCase()+"_idx ON "+sqlTabName.toLowerCase()+" USING GIST ( "+idxcol.getName().toLowerCase()+" )";
+			}else{
+				idxstmt="CREATE INDEX "+tab.getName().getName().toLowerCase()+"_"+idxcol.getName().toLowerCase()+"_idx ON "+sqlTabName.toLowerCase()+" ( "+idxcol.getName().toLowerCase()+" )";
+			}
+			addCreateLine(new Stmt(idxstmt));
+			
+			if(!tableExists){
+				Statement dbstmt = null;
+				try{
+					try{
+						dbstmt = conn.createStatement();
+						EhiLogger.traceBackendCmd(idxstmt);
+						dbstmt.execute(idxstmt);
+					}finally{
+						dbstmt.close();
+					}
+				}catch(SQLException ex){
+					IOException iox=new IOException("failed to add index on column "+tab.getName()+"."+idxcol.getName());
+					iox.initCause(ex);
+					throw iox;
+				}
+			}
+		}
+		indexColumns=null;
 		
 		String cmt=tab.getComment();
 		if(cmt!=null){
@@ -262,6 +292,8 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 				return "CURVEPOLYGON";
 			case DbColGeometry.MULTICURVE:
 				return "MULTICURVE";
+			case DbColGeometry.MULTISURFACE:
+				return "MULTISURFACE";
 			case DbColGeometry.POLYHEDRALSURFACE:
 				return "POLYHEDRALSURFACE";
 			case DbColGeometry.TIN:
@@ -271,5 +303,52 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 			default:
 				throw new IllegalArgumentException();
 		 }
+	}
+
+	@Override
+	public void visitTableBeginConstraint(DbTable dbTab) throws IOException {
+		super.visitTableBeginConstraint(dbTab);
+		
+		String sqlTabName=dbTab.getName().getQName();
+		for(Iterator dbColi=dbTab.iteratorColumn();dbColi.hasNext();){
+			DbColumn dbCol=(DbColumn) dbColi.next();
+			if(dbCol.getReferencedTable()!=null){
+				String createstmt=null;
+				String action="";
+				if(dbCol.getOnUpdateAction()!=null){
+					action=action+" ON UPDATE "+dbCol.getOnUpdateAction();
+				}
+				if(dbCol.getOnDeleteAction()!=null){
+					action=action+" ON DELETE "+dbCol.getOnDeleteAction();
+				}
+				String constraintName=dbTab.getName().getName()+"_"+dbCol.getName()+"_fkey";
+				//  ALTER TABLE ce.classb1 ADD CONSTRAINT classb1_t_id_fkey FOREIGN KEY ( t_id ) REFERENCES ce.classa1;
+				createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" FOREIGN KEY ( "+dbCol.getName()+" ) REFERENCES "+dbCol.getReferencedTable().getQName()+action+" DEFERRABLE INITIALLY DEFERRED";
+				addCreateLine(new Stmt(createstmt));
+				
+				//  ALTER TABLE ce.classb1 DROP CONSTRAINT classb1_t_id_fkey;
+				String dropstmt=null;
+				dropstmt="ALTER TABLE "+sqlTabName+" DROP CONSTRAINT "+constraintName;
+				addDropLine(new Stmt(dropstmt));
+				
+				if(tableCreated(dbTab.getName())){
+					Statement dbstmt = null;
+					try{
+						try{
+							dbstmt = conn.createStatement();
+							EhiLogger.traceBackendCmd(createstmt);
+							dbstmt.execute(createstmt);
+						}finally{
+							dbstmt.close();
+						}
+					}catch(SQLException ex){
+						IOException iox=new IOException("failed to add fk constraint to table "+dbTab.getName());
+						iox.initCause(ex);
+						throw iox;
+					}
+				}
+				
+			}
+		}
 	}
 }

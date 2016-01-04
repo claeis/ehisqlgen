@@ -25,9 +25,7 @@ package ch.ehi.sqlgen.generator_impl.jdbc;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Iterator;
-
 import java.io.IOException;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
@@ -48,6 +46,7 @@ public class GeneratorJdbc implements Generator {
 	protected Connection conn=null;
 	private ArrayList dropLines=null; // list<AbstractStmt>
 	private ArrayList createLines=null;  // list<AbstractStmt>
+	private java.util.HashSet<DbTableName> createdTables=new java.util.HashSet<DbTableName>();
 	public abstract class AbstractStmt {
 		private String line=null;
 		public AbstractStmt(String line1){
@@ -161,6 +160,7 @@ public class GeneratorJdbc implements Generator {
 					dbstmt = conn.createStatement();
 					EhiLogger.traceBackendCmd(stmt);
 					dbstmt.executeUpdate(stmt);
+					createdTables.add(tab.getName());
 				}finally{
 					dbstmt.close();
 				}
@@ -196,6 +196,8 @@ public class GeneratorJdbc implements Generator {
 			type="BLOB";
 		}else if(column instanceof DbColId){
 			type="NUMBER(9)";
+		}else if(column instanceof DbColUuid){
+			type="VARCHAR2(36)";
 		}else if(column instanceof DbColNumber){
 			DbColNumber col=(DbColNumber)column;
 			type="NUMBER("+Integer.toString(col.getSize())+")";
@@ -303,6 +305,12 @@ public class GeneratorJdbc implements Generator {
 			throw iox;
 		}
 		return false;
+	}
+	/** tests if a table with the given name was created in phase1
+	 */
+	public boolean tableCreated(DbTableName tableName)
+	{
+		return createdTables.contains(tableName);
 	}
 	public static void main(String args[]){
 		//EhiLogger.getInstance().setTraceFilter(false);

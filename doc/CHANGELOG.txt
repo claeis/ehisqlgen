@@ -1,0 +1,16 @@
+ehisqlgen 1.2.1 (2015-10-xx)
+---------------------------
+- fixed missing geom index 
+- MULTISURFACE added
+
+ehisqlgen 1.2.0 (2015-09-16)
+---------------------------
+- DbColumn.index added to support CREATE INDEX on any column
+- DbColumn.referencedTable added to support REFERENCES TO
+- DbColumn.onDeleteAction added to support ON DELETE CASCADE/RESTRICT
+- DbColumn.onUpdateAction added to support ON UPDATE CASCADE
+
+ehisqlgen 1.1.0 (2015-09-10)
+---------------------------
+- DbColUuid added to support UUID in postgresql
+- DbColumn.defaultValue added to support DEFAULT in postgresql

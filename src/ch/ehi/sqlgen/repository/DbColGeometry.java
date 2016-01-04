@@ -34,6 +34,7 @@ public class DbColGeometry extends DbColumn
   public static final int COMPOUNDCURVE=9;
   public static final int CURVEPOLYGON=10;
   public static final int MULTICURVE=11;
+  public static final int MULTISURFACE=12;
   public static final int POLYHEDRALSURFACE = 15;
   public static final int TIN = 16;
   public static final int TRIANGLE = 17;

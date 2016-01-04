@@ -30,6 +30,11 @@ public class DbColumn
 {
 	private String comment=null;
   private String name;
+  private String defaultValue=null;
+  private DbTableName referencedTable=null;
+  private String onDeleteAction=null;
+  private String onUpdateAction=null;
+  private boolean index=false;
 
   /** get current value of name
    *  @see #setName
@@ -131,6 +136,57 @@ public class DbColumn
 
 	public String getComment() {
 		return comment;
+	}
+
+	public String getDefaultValue() {
+		return defaultValue;
+	}
+	/** sets the SQL default value of that column
+	 * @param defaultValue such as "10" or "nextval()"
+	 */
+	public void setDefaultValue(String defaultValue) {
+		this.defaultValue = defaultValue;
+	}
+
+	public DbTableName getReferencedTable() {
+		return referencedTable;
+	}
+
+	/** sets the SQL name of the referenced table
+	 * @param referencedTable such as "parcel". If null, no table referenced by this column.
+	 */
+	public void setReferencedTable(DbTableName referencedTable) {
+		this.referencedTable = referencedTable;
+	}
+
+	public String getOnDeleteAction() {
+		return onDeleteAction;
+	}
+
+	/** specifies the action to perform when a referenced row in the referenced table is being deleted
+	 * @param onDeleteAction RESTRICT, CASCADE, SET NULL. If null, not delete action.
+	 * RESTRICT Produce an error indicating that the deletion or update would create a foreign key constraint violation. This is the same as NO ACTION except that the check is not deferrable. 
+	 * CASCADE Delete any rows referencing the deleted row, or update the values of the referencing column(s) to the new values of the referenced columns, respectively. 
+	 * SET NULL Set the referencing column(s) to null. 
+	 */
+	public void setOnDeleteAction(String onDeleteAction) {
+		this.onDeleteAction = onDeleteAction;
+	}
+
+	public boolean isIndex() {
+		return index;
+	}
+
+	public void setIndex(boolean index) {
+		this.index = index;
+	}
+
+	public String getOnUpdateAction() {
+		return onUpdateAction;
+	}
+
+	public void setOnUpdateAction(String onUpdateAction) {
+		this.onUpdateAction = onUpdateAction;
 	}
 	
 }

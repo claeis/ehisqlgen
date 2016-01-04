@@ -57,6 +57,8 @@ public class GeneratorOracle extends GeneratorJdbc {
 			type="MDSYS.SDO_GEOMETRY";
 		}else if(column instanceof DbColId){
 			type="NUMBER(9)";
+		}else if(column instanceof DbColUuid){
+			type="VARCHAR2(36)";
 		}else if(column instanceof DbColNumber){
 			DbColNumber col=(DbColNumber)column;
 			type="NUMBER("+Integer.toString(col.getSize())+")";
