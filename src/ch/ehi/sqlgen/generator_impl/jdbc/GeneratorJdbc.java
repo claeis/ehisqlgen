@@ -193,7 +193,7 @@ public class GeneratorJdbc implements Generator {
 			DbColDecimal col=(DbColDecimal)column;
 			type="DECIMAL("+Integer.toString(col.getSize())+","+Integer.toString(col.getPrecision())+")";
 		}else if(column instanceof DbColGeometry){
-			type="MDSYS.SDO_GEOMETRY";
+			type="BLOB";
 		}else if(column instanceof DbColId){
 			type="NUMBER(9)";
 		}else if(column instanceof DbColNumber){
@@ -201,9 +201,9 @@ public class GeneratorJdbc implements Generator {
 			type="NUMBER("+Integer.toString(col.getSize())+")";
 		}else if(column instanceof DbColVarchar){
 			int colsize=((DbColVarchar)column).getSize();
-			type="VARCHAR2("+Integer.toString(colsize)+")";
+			type="VARCHAR("+Integer.toString(colsize)+")";
 		}else{
-			type="VARCHAR2(20)";
+			type="VARCHAR(20)";
 		}
 		String isNull=column.isNotNull()?"NOT NULL":"NULL";
 		String name=column.getName();
