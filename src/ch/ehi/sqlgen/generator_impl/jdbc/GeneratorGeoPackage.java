@@ -133,7 +133,8 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 		//INSERT INTO gpkg_geometry_columns (table_name,column_name,geometry_type_name,srs_id,z,m) 
 		//VALUES ('BoFlaeche' ,'Geometrie' ,'CURVEPOLYGON',21781,0,0);
 		
-		for(DbColGeometry geo:geomColumns){
+		if(geomColumns.size()>0){
+			DbColGeometry geo=geomColumns.get(0);
 			String srsId="(SELECT srs_id FROM gpkg_spatial_ref_sys WHERE organization=\'"+geo.getSrsAuth()+"\' AND organization_coordsys_id="+geo.getSrsId()+")";
 			
 			String stmt1="INSERT INTO gpkg_contents (table_name,data_type,identifier,description,last_change,min_x,min_y,max_x,max_y,srs_id)" 
