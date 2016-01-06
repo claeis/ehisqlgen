@@ -62,30 +62,30 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 		if(column instanceof DbColBoolean){
 			type="BOOLEAN";
 		}else if(column instanceof DbColDateTime){
-			type="TIMESTAMP";
+			type="DATETIME";
 		}else if(column instanceof DbColDate){
 			type="DATE";
 		}else if(column instanceof DbColTime){
 			type="TIME";
 		}else if(column instanceof DbColDecimal){
 			DbColDecimal col=(DbColDecimal)column;
-			type="DECIMAL("+Integer.toString(col.getSize())+","+Integer.toString(col.getPrecision())+")";
+			type="DOUBLE";
 		}else if(column instanceof DbColGeometry){
 			geomColumns.add((DbColGeometry) column);
-			type="BLOB";
+			type=getGpkgGeometryTypename(((DbColGeometry) column).getType());
 		}else if(column instanceof DbColId){
 			type="INTEGER";
 		}else if(column instanceof DbColUuid){
-			type="CHARACTER(36)"; // 550e8400-e29b-11d4-a716-446655440000
+			type="TEXT(36)"; // 550e8400-e29b-11d4-a716-446655440000
 		}else if(column instanceof DbColNumber){
 			DbColNumber col=(DbColNumber)column;
-			type="NUMBER("+Integer.toString(col.getSize())+")";
+			type="DOUBLE";
 		}else if(column instanceof DbColVarchar){
 			int colsize=((DbColVarchar)column).getSize();
 			if(colsize==-1){
 				type="TEXT";
 			}else{
-				type="VARCHAR("+Integer.toString(colsize)+")";
+				type="TEXT("+Integer.toString(colsize)+")";
 			}
 		}else{
 			type="TEXT";
