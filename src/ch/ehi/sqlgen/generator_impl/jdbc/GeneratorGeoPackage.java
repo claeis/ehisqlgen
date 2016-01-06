@@ -92,7 +92,7 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 		}
 		String isNull=column.isNotNull()?"NOT NULL":"NULL";
 		if(column.isPrimaryKey()){
-			isNull="PRIMARY KEY";
+			isNull="NOT NULL PRIMARY KEY";
 		}
 		String sep=" ";
 		String defaultValue="";
