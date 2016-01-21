@@ -118,6 +118,23 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 		indexColumns=new ArrayList<DbColumn>();
 	}
 
+	@Override
+	public void visitTableEndColumn(DbTable tab) throws IOException {
+		for(Iterator idxi=tab.iteratorIndex();idxi.hasNext();){
+			DbIndex idx=(DbIndex)idxi.next();
+			if(idx.isUnique()){
+				out.write(getIndent()+colSep+"UNIQUE (");
+				String sep="";
+				for(Iterator attri=idx.iteratorAttr();attri.hasNext();){
+					DbColumn attr=(DbColumn)attri.next();
+					out.write(sep+attr.getName());
+					sep=",";
+				}
+				out.write(")"+newline());
+				colSep=",";
+			}
+		}
+	}
 	public void visit1TableEnd(DbTable tab) throws IOException {
 		String sqlTabName=tab.getName().getName();
 		if(tab.getName().getSchema()!=null){
@@ -136,9 +153,9 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 		if(geomColumns.size()>0){
 			DbColGeometry geo=geomColumns.get(0);
 			String srsId="(SELECT srs_id FROM gpkg_spatial_ref_sys WHERE organization=\'"+geo.getSrsAuth()+"\' AND organization_coordsys_id="+geo.getSrsId()+")";
-			
+			String cmt=tab.getComment()==null?"null":"\'"+tab.getComment()+"\'";
 			String stmt1="INSERT INTO gpkg_contents (table_name,data_type,identifier,description,last_change,min_x,min_y,max_x,max_y,srs_id)" 
-			+"VALUES (\'"+tab.getName().getName()+"\','features',\'"+tab.getIliName()+"\',\'"+tab.getComment()+"\',\'"+today+"\',"+geo.getMin1()+","+geo.getMin2()+","+geo.getMax1()+","+geo.getMax2()+","+srsId+")";
+			+"VALUES (\'"+tab.getName().getName()+"\','features',\'"+tab.getName().getName()+"\',"+cmt+",\'"+today+"\',"+geo.getMin1()+","+geo.getMin2()+","+geo.getMax1()+","+geo.getMax2()+","+srsId+")";
 			String stmt2="INSERT INTO gpkg_geometry_columns (table_name,column_name,geometry_type_name,srs_id,z,m)" 
 			+"VALUES (\'"+tab.getName().getName()+"\',\'"+geo.getName()+"\' ,\'"+getGpkgGeometryTypename(geo.getType())+"\',"+srsId+","+(geo.getDimension()==2?"0":"1")+",0)";
 			
@@ -206,6 +223,10 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 		}
 		indexColumns=null;
 		
+	}
+	@Override
+	public void visitIndex(DbIndex idx) throws IOException {
+		// don't add UNQIUE constraint via  ALTER TABLE
 	}
 	static public String escapeString(String cmt)
 	{

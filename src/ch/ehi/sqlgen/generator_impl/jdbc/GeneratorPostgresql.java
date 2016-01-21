@@ -42,6 +42,10 @@ import ch.ehi.sqlgen.repository.*;
 public class GeneratorPostgresql extends GeneratorJdbc {
 
 	private boolean createGeomIdx=false;
+	private ArrayList<DbColumn> indexColumns=null;
+	private ArrayList<DbColGeometry> geomColumns=null;
+	
+	@Override
 	public void visitSchemaBegin(Settings config, DbSchema schema)
 			throws IOException {
 		super.visitSchemaBegin(config, schema);
@@ -50,6 +54,7 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 		}
 	}
 
+	@Override
 	public void visitColumn(DbColumn column) throws IOException {
 		String type="";
 		String size="";
@@ -107,14 +112,20 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 			colSep=",";
 		}
 	}
-	private ArrayList<DbColumn> indexColumns=null;
-	private ArrayList<DbColGeometry> geomColumns=null;
+	
+	@Override
 	public void visit1TableBegin(DbTable tab) throws IOException {
 		super.visit1TableBegin(tab);
 		geomColumns=new ArrayList<DbColGeometry>();
 		indexColumns=new ArrayList<DbColumn>();
 	}
+	
+	@Override
+	public void visitTableEndColumn(DbTable tab) throws IOException {
+		boolean tableExists=tableExists(tab.getName());
+	}
 
+	@Override
 	public void visit1TableEnd(DbTable tab) throws IOException {
 		String sqlTabName=tab.getName().getName();
 		if(tab.getName().getSchema()!=null){
@@ -122,9 +133,6 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 		}
 		boolean tableExists=tableExists(tab.getName());
 		super.visit1TableEnd(tab);
-		
-		
-		
 		for(DbColGeometry geo:geomColumns){
 			String stmt=null;
 			if(tab.getName().getSchema()!=null){

@@ -216,13 +216,46 @@ public class GeneratorJdbc implements Generator {
 	}
 	public void visitTableEndColumn(DbTable arg0) throws IOException {
 	}
-	public void visitIndex(DbIndex arg0) throws IOException {
+	public void visitIndex(DbIndex idx) throws IOException {
+		if(idx.isUnique()){
+			java.io.StringWriter out = new java.io.StringWriter();
+			DbTable tab=idx.getTable();
+			String tableName=tab.getName().getQName();
+			out.write(getIndent()+"ALTER TABLE "+tableName+" ADD UNIQUE (");
+			String sep="";
+			for(Iterator attri=idx.iteratorAttr();attri.hasNext();){
+				DbColumn attr=(DbColumn)attri.next();
+				out.write(sep+attr.getName());
+				sep=",";
+			}
+			out.write(")"+newline());
+			String stmt=out.toString();
+			addCreateLine(new Stmt(stmt));
+			out=null;
+			if(createdTables.contains(tab.getName())){
+				Statement dbstmt = null;
+				try{
+					try{
+						dbstmt = conn.createStatement();
+						EhiLogger.traceBackendCmd(stmt);
+						dbstmt.executeUpdate(stmt);
+					}finally{
+						dbstmt.close();
+					}
+				}catch(SQLException ex){
+					IOException iox=new IOException("failed to add UNIQUE to table "+tab.getName());
+					iox.initCause(ex);
+					throw iox;
+				}
+			}
+		}
 	}
 	public void visitTableBeginIndex(DbTable arg0) throws IOException {
 	}
 	public void visitTableEndIndex(DbTable arg0) throws IOException {
 	}
 	public void visitConstraint(DbConstraint arg0) throws IOException {
+		
 	}
 	public void visitTableBeginConstraint(DbTable arg0) throws IOException {
 	}
