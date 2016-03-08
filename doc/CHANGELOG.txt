@@ -1,3 +1,7 @@
+ehisqlgen 1.4.1 (2016-03-07)
+---------------------------
+- GPKG: fixed mapping of DbColNumber to INTEGER
+
 ehisqlgen 1.4.0 (2016-01-21)
 ---------------------------
 - added UNIQUE support to GPKG and PostGIS driver
