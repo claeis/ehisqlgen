@@ -76,7 +76,7 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 			geomColumns.add((DbColGeometry) column);
 			createColNow=false;
 		}else if(column instanceof DbColId){
-			type="integer";
+			type="bigint";
 		}else if(column instanceof DbColUuid){
 			type="uuid";
 		}else if(column instanceof DbColNumber){
