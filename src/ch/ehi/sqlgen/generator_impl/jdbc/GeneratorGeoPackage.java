@@ -82,7 +82,7 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 			type="INTEGER";
 		}else if(column instanceof DbColVarchar){
 			int colsize=((DbColVarchar)column).getSize();
-			if(colsize==-1){
+			if(colsize==DbColVarchar.UNLIMITED){
 				type="TEXT";
 			}else{
 				type="TEXT("+Integer.toString(colsize)+")";

@@ -84,7 +84,7 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 			type="integer";
 		}else if(column instanceof DbColVarchar){
 			int colsize=((DbColVarchar)column).getSize();
-			if(colsize==-1){
+			if(colsize==DbColVarchar.UNLIMITED){
 				type="text";
 			}else{
 				type="varchar("+Integer.toString(colsize)+")";

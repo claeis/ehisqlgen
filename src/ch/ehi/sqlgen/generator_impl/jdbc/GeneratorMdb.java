@@ -25,9 +25,7 @@ package ch.ehi.sqlgen.generator_impl.jdbc;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Iterator;
-
 import java.io.IOException;
-
 import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.SQLException;
@@ -67,7 +65,7 @@ public class GeneratorMdb extends GeneratorJdbc {
 			type="LONG";
 		}else if(column instanceof DbColVarchar){
 			int colsize=((DbColVarchar)column).getSize();
-			if(colsize==-1 || colsize>255){
+			if(colsize==DbColVarchar.UNLIMITED || colsize>255){
 				type="MEMO";
 			}else{
 				type="TEXT("+Integer.toString(colsize)+")";

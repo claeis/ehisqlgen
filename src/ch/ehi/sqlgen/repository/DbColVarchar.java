@@ -40,7 +40,7 @@ public class DbColVarchar extends DbColumn
   // declare/define something only in the code
   // please fill in/modify the following section
   // -beg- preserve=yes 4050659101ED detail_begin "DbColVarchar"
-	public final int UNLIMITED=-1;
+	public static final int UNLIMITED=-1;
 
   // -end- 4050659101ED detail_begin "DbColVarchar"
 
