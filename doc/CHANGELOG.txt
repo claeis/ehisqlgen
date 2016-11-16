@@ -1,3 +1,7 @@
+ehisqlgen 1.6.0 (2016-11-16)
+---------------------------
+- DbColVarchar default size set to UNLIMITED
+
 ehisqlgen 1.5.0 (2016-08-09)
 ---------------------------
 - PG: map DbColId to bigint

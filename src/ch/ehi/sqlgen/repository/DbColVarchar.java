@@ -39,12 +39,13 @@ public class DbColVarchar extends DbColumn
 {
   // declare/define something only in the code
   // please fill in/modify the following section
-  // -beg- preserve=no 4050659101ED detail_begin "DbColVarchar"
+  // -beg- preserve=yes 4050659101ED detail_begin "DbColVarchar"
+	public final int UNLIMITED=-1;
 
   // -end- 4050659101ED detail_begin "DbColVarchar"
 
   // -beg- preserve=no 405067070154 var4050659101ED "size"
-  private int size = 40;
+  private int size = UNLIMITED; 
   // -end- 405067070154 var4050659101ED "size"
 
   /** get current value of size
