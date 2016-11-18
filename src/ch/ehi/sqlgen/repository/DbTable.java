@@ -24,6 +24,8 @@
 package ch.ehi.sqlgen.repository;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 
 import ch.ehi.sqlgen.repository.DbColumn;
 import ch.ehi.sqlgen.repository.DbConstraint;
@@ -34,6 +36,7 @@ public class DbTable
 {
   private java.util.List column = new java.util.ArrayList();
   private String comment=null;
+  private HashSet<String> constraintNames=new HashSet<String>();
 
   /** add a Column.
    *  
@@ -210,7 +213,10 @@ public class DbTable
   {
     index.add(index1);
     index1._linkTable(this);
-    
+    String idxName=index1.getName();
+    if(idxName!=null){
+    	addConstraintName(idxName);
+    }
     return;
   }
 
@@ -273,7 +279,10 @@ public class DbTable
   public void _linkIndex(DbIndex index1)
   {
     index.add(index1);
-    
+    String idxName=index1.getName();
+    if(idxName!=null){
+    	addConstraintName(idxName);
+    }
     return;
   }
 
@@ -458,6 +467,30 @@ public class DbTable
 
 	public String getComment() {
 		return comment;
+	}
+
+	public boolean addConstraintName(String e) {
+		return constraintNames.add(e);
+	}
+
+	public void clearConstraintNames() {
+		constraintNames.clear();
+	}
+
+	public boolean containsConstraintName(String o) {
+		return constraintNames.contains(o);
+	}
+
+	public Iterator<String> iteratorConstraintNames() {
+		return constraintNames.iterator();
+	}
+
+	public boolean removeConstraintName(String o) {
+		return constraintNames.remove(o);
+	}
+
+	public int sizeConstraintNames() {
+		return constraintNames.size();
 	}
 
 }

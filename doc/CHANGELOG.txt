@@ -1,3 +1,7 @@
+ehisqlgen 1.7.0 (2016-11-18)
+---------------------------
+- make constraint name unique and respect given max length
+
 ehisqlgen 1.6.0 (2016-11-16)
 ---------------------------
 - DbColVarchar default size set to UNLIMITED

@@ -123,7 +123,20 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 		for(Iterator idxi=tab.iteratorIndex();idxi.hasNext();){
 			DbIndex idx=(DbIndex)idxi.next();
 			if(idx.isUnique()){
-				out.write(getIndent()+colSep+"UNIQUE (");
+				
+				String constraintName=idx.getName();
+				if(constraintName==null){
+					String colNames[]=new String[idx.sizeAttr()];
+					int i=0;
+					for(Iterator attri=idx.iteratorAttr();attri.hasNext();){
+						DbColumn attr=(DbColumn)attri.next();
+						colNames[i++]=attr.getName();
+					}
+					constraintName=createConstraintName(tab,"key", colNames);
+				}
+				
+				
+				out.write(getIndent()+colSep+"CONSTRAINT "+constraintName+" UNIQUE (");
 				String sep="";
 				for(Iterator attri=idx.iteratorAttr();attri.hasNext();){
 					DbColumn attr=(DbColumn)attri.next();
@@ -195,10 +208,11 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 		for(DbColumn idxcol:indexColumns){
 			
 			String idxstmt=null;
+			String idxName=createConstraintName(tab,"idx",idxcol.getName().toLowerCase());
 			if(idxcol instanceof DbColGeometry){
 				//idxstmt="CREATE INDEX "+tab.getName().getName().toLowerCase()+"_"+idxcol.getName().toLowerCase()+"_idx ON "+sqlTabName.toLowerCase()+" USING GIST ( "+idxcol.getName().toLowerCase()+" )";
 			}else{
-				idxstmt="CREATE INDEX "+tab.getName().getName().toLowerCase()+"_"+idxcol.getName().toLowerCase()+"_idx ON "+sqlTabName.toLowerCase()+" ( "+idxcol.getName().toLowerCase()+" )";
+				idxstmt="CREATE INDEX "+idxName+" ON "+sqlTabName.toLowerCase()+" ( "+idxcol.getName().toLowerCase()+" )";
 			}
 			if(idxstmt!=null){
 				addCreateLine(new Stmt(idxstmt));
@@ -289,7 +303,7 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 				if(dbCol.getOnDeleteAction()!=null){
 					action=action+" ON DELETE "+dbCol.getOnDeleteAction();
 				}
-				String constraintName=dbTab.getName().getName()+"_"+dbCol.getName()+"_fkey";
+				String constraintName=createConstraintName(dbTab,"fkey",dbCol.getName());
 				//  ALTER TABLE ce.classb1 ADD CONSTRAINT classb1_t_id_fkey FOREIGN KEY ( t_id ) REFERENCES ce.classa1;
 				createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" FOREIGN KEY ( "+dbCol.getName()+" ) REFERENCES "+dbCol.getReferencedTable().getQName()+action+" DEFERRABLE INITIALLY DEFERRED";
 				addCreateLine(new Stmt(createstmt));

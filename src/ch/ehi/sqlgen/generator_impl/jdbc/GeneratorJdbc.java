@@ -42,11 +42,14 @@ import ch.ehi.sqlgen.repository.*;
  * @version $Revision: 1.1 $ $Date: 2006/05/30 07:40:33 $
  */
 public class GeneratorJdbc implements Generator {
+	public static int DEFAULT_NAME_LENGTH=60;
+	private int _maxSqlNameLength=DEFAULT_NAME_LENGTH;
 	protected java.io.StringWriter out=null;
 	protected Connection conn=null;
 	private ArrayList dropLines=null; // list<AbstractStmt>
 	private ArrayList createLines=null;  // list<AbstractStmt>
 	private java.util.HashSet<DbTableName> createdTables=new java.util.HashSet<DbTableName>();
+	private static final String MAX_SQLNAME_LENGTH="ch.ehi.ili2db.maxSqlNameLength";
 	public abstract class AbstractStmt {
 		private String line=null;
 		public AbstractStmt(String line1){
@@ -76,6 +79,9 @@ public class GeneratorJdbc implements Generator {
 		}
 		dropLines=new ArrayList();
 		createLines=new ArrayList();
+		if(config.getValue(MAX_SQLNAME_LENGTH)!=null){
+			_maxSqlNameLength=Integer.parseInt(config.getValue(MAX_SQLNAME_LENGTH));
+		}
 	}
 
 	public void visitSchemaEnd(DbSchema schema) throws IOException {
@@ -221,7 +227,17 @@ public class GeneratorJdbc implements Generator {
 			java.io.StringWriter out = new java.io.StringWriter();
 			DbTable tab=idx.getTable();
 			String tableName=tab.getName().getQName();
-			out.write(getIndent()+"ALTER TABLE "+tableName+" ADD UNIQUE (");
+			String constraintName=idx.getName();
+			if(constraintName==null){
+				String colNames[]=new String[idx.sizeAttr()];
+				int i=0;
+				for(Iterator attri=idx.iteratorAttr();attri.hasNext();){
+					DbColumn attr=(DbColumn)attri.next();
+					colNames[i++]=attr.getName();
+				}
+				constraintName=createConstraintName(tab,"key", colNames);
+			}
+			out.write(getIndent()+"ALTER TABLE "+tableName+" ADD CONSTRAINT "+constraintName+" UNIQUE (");
 			String sep="";
 			for(Iterator attri=idx.iteratorAttr();attri.hasNext();){
 				DbColumn attr=(DbColumn)attri.next();
@@ -368,5 +384,52 @@ public class GeneratorJdbc implements Generator {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	protected String createConstraintName(DbTable table,String suffix, String... colNames) {
+		int elec=colNames.length+1;
+		int maxLength=getMaxNameLength()-(suffix.length()+1)-1;
+		int eleLength=maxLength/elec-1;
+		StringBuffer name=new StringBuffer();
+		name.append(shortcutName(table.getName().getName(),eleLength));
+		for(String colName:colNames){
+			name.append("_");
+			name.append(shortcutName(colName,eleLength));
+		}
+		String sqlname=name.toString();
+		String base=sqlname;
+		int c=1;
+		while(table.containsConstraintName(sqlname)){
+			sqlname=base+Integer.toString(c++);
+		}
+		return sqlname;
+	}
+
+	public static String shortcutName(String aname, int maxlen) {
+		StringBuffer name = new StringBuffer(aname);
+		// number of charcters to remove
+		int stripc = name.length() - maxlen;
+		if (stripc <= 0)
+			return aname;
+		// remove vocals
+		for (int i = name.length() - 4; i >= 3; i--) {
+			char c = name.charAt(i);
+			if (c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u'
+					|| c == 'A' || c == 'E' || c == 'I' || c == 'O' || c == 'U') {
+				name.deleteCharAt(i);
+				stripc--;
+				if (stripc == 0)
+					return name.toString();
+			}
+		}
+		// still to long
+		// remove from the middle of the name
+		int start = (name.length() - stripc) / 2;
+		name.delete(start, start + stripc);
+		// ASSERT(!name.IsEmpty());
+		return name.toString();
+	}
+
+	private int getMaxNameLength() {
+		return _maxSqlNameLength;
 	}
 }

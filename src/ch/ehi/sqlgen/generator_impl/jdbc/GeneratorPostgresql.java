@@ -40,6 +40,24 @@ import ch.ehi.sqlgen.repository.*;
  * @version $Revision: 1.1 $ $Date: 2007/01/27 09:26:12 $
  */
 public class GeneratorPostgresql extends GeneratorJdbc {
+	/*
+	The standard names for indexes in PostgreSQL are:
+
+	{tablename}_{columnname(s)}_{suffix}
+
+	where the suffix is one of the following:
+
+	    pkey for a Primary Key constraint
+	    key for a Unique constraint
+	    excl for an Exclusion constraint
+	    idx for any other kind of index
+	    fkey for a Foreign key
+	    check for a Check constraint
+
+	Standard suffix for sequences is
+
+	    seq for all sequences
+	*/
 
 	private boolean createGeomIdx=false;
 	private ArrayList<DbColumn> indexColumns=null;
@@ -187,10 +205,11 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 		for(DbColumn idxcol:indexColumns){
 			
 			String idxstmt=null;
+			String idxName=createConstraintName(tab,"idx",idxcol.getName().toLowerCase());
 			if(idxcol instanceof DbColGeometry){
-				idxstmt="CREATE INDEX "+tab.getName().getName().toLowerCase()+"_"+idxcol.getName().toLowerCase()+"_idx ON "+sqlTabName.toLowerCase()+" USING GIST ( "+idxcol.getName().toLowerCase()+" )";
+				idxstmt="CREATE INDEX "+idxName+" ON "+sqlTabName.toLowerCase()+" USING GIST ( "+idxcol.getName().toLowerCase()+" )";
 			}else{
-				idxstmt="CREATE INDEX "+tab.getName().getName().toLowerCase()+"_"+idxcol.getName().toLowerCase()+"_idx ON "+sqlTabName.toLowerCase()+" ( "+idxcol.getName().toLowerCase()+" )";
+				idxstmt="CREATE INDEX "+idxName+" ON "+sqlTabName.toLowerCase()+" ( "+idxcol.getName().toLowerCase()+" )";
 			}
 			addCreateLine(new Stmt(idxstmt));
 			
@@ -263,6 +282,7 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 		
 		// ALTER TABLE <tablename> ADD CONSTRAINT fid_pkey PRIMARY KEY  (<primary key column>);
 	}
+
 	static public String escapeString(String cmt)
 	{
 		StringBuilder ret=new StringBuilder((int)cmt.length());
@@ -329,7 +349,7 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 				if(dbCol.getOnDeleteAction()!=null){
 					action=action+" ON DELETE "+dbCol.getOnDeleteAction();
 				}
-				String constraintName=dbTab.getName().getName()+"_"+dbCol.getName()+"_fkey";
+				String constraintName=createConstraintName(dbTab,"fkey",dbCol.getName());
 				//  ALTER TABLE ce.classb1 ADD CONSTRAINT classb1_t_id_fkey FOREIGN KEY ( t_id ) REFERENCES ce.classa1;
 				createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" FOREIGN KEY ( "+dbCol.getName()+" ) REFERENCES "+dbCol.getReferencedTable().getQName()+action+" DEFERRABLE INITIALLY DEFERRED";
 				addCreateLine(new Stmt(createstmt));
