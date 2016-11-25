@@ -1,3 +1,8 @@
+ehisqlgen 1.8.0 (2016-11-25)
+---------------------------
+- make GeneratorJdbc.addDropLine() public
+- make GeneratorJdbc.addCreateLine() public
+
 ehisqlgen 1.7.0 (2016-11-18)
 ---------------------------
 - make constraint name unique and respect given max length

@@ -70,6 +70,8 @@ public class GeneratorJdbc implements Generator {
 		}
 	}
 	public GeneratorJdbc(){
+		dropLines=new ArrayList();
+		createLines=new ArrayList();
 	}
 	public void visitSchemaBegin(ch.ehi.basics.settings.Settings config, DbSchema schema)
 		throws IOException {
@@ -77,8 +79,6 @@ public class GeneratorJdbc implements Generator {
 		if(conn==null){
 			throw new IllegalArgumentException("config.getConnection()==null");
 		}
-		dropLines=new ArrayList();
-		createLines=new ArrayList();
 		if(config.getValue(MAX_SQLNAME_LENGTH)!=null){
 			_maxSqlNameLength=Integer.parseInt(config.getValue(MAX_SQLNAME_LENGTH));
 		}
@@ -299,13 +299,13 @@ public class GeneratorJdbc implements Generator {
 	protected String newline(){
 		return txtOut.newline();
 	}
-	protected void addDropLine(AbstractStmt dropstmt){
+	public void addDropLine(AbstractStmt dropstmt){
 		dropLines.add(dropstmt);
 	}
 	public Iterator iteratorDropLines(){
 		return dropLines.iterator();
 	}
-	protected void addCreateLine(AbstractStmt createstmt){
+	public void addCreateLine(AbstractStmt createstmt){
 		createLines.add(createstmt);
 	}
 	public Iterator iteratorCreateLines(){
