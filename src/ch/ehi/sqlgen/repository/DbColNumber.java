@@ -76,9 +76,26 @@ public class DbColNumber extends DbColumn
 
   // declare/define something only in the code
   // please fill in/modify the following section
-  // -beg- preserve=no 405066900171 detail_end "DbColNumber"
+  // -beg- preserve=yes 405066900171 detail_end "DbColNumber"
+  Integer minValue=null;
+  Integer maxValue=null;
+  public Integer getMinValue() {
+		return minValue;
+	}
 
+	public void setMinValue(Integer minValue) {
+		this.minValue = minValue;
+	}
+
+	public Integer getMaxValue() {
+		return maxValue;
+	}
+
+	public void setMaxValue(Integer maxValue) {
+		this.maxValue = maxValue;
+	}
   // -end- 405066900171 detail_end "DbColNumber"
+
 
 }
 

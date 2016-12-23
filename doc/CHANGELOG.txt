@@ -1,3 +1,9 @@
+ehisqlgen 1.9.0 (2016-12-21)
+---------------------------
+- add DbColNumber.min, max
+- add DbColDecimal.min, max
+- fixed FK constraint in GeoPackageGenerator
+
 ehisqlgen 1.8.0 (2016-11-25)
 ---------------------------
 - make GeneratorJdbc.addDropLine() public

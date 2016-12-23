@@ -73,7 +73,7 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 	}
 
 	@Override
-	public void visitColumn(DbColumn column) throws IOException {
+	public void visitColumn(DbTable dbTab,DbColumn column) throws IOException {
 		String type="";
 		String size="";
 		String notSupported=null;
@@ -352,31 +352,62 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 				String constraintName=createConstraintName(dbTab,"fkey",dbCol.getName());
 				//  ALTER TABLE ce.classb1 ADD CONSTRAINT classb1_t_id_fkey FOREIGN KEY ( t_id ) REFERENCES ce.classa1;
 				createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" FOREIGN KEY ( "+dbCol.getName()+" ) REFERENCES "+dbCol.getReferencedTable().getQName()+action+" DEFERRABLE INITIALLY DEFERRED";
-				addCreateLine(new Stmt(createstmt));
 				
 				//  ALTER TABLE ce.classb1 DROP CONSTRAINT classb1_t_id_fkey;
 				String dropstmt=null;
 				dropstmt="ALTER TABLE "+sqlTabName+" DROP CONSTRAINT "+constraintName;
-				addDropLine(new Stmt(dropstmt));
+
+				addConstraint(dbTab, constraintName,createstmt, dropstmt);
 				
-				if(tableCreated(dbTab.getName())){
-					Statement dbstmt = null;
-					try{
-						try{
-							dbstmt = conn.createStatement();
-							EhiLogger.traceBackendCmd(createstmt);
-							dbstmt.execute(createstmt);
-						}finally{
-							dbstmt.close();
-						}
-					}catch(SQLException ex){
-						IOException iox=new IOException("failed to add fk constraint to table "+dbTab.getName());
-						iox.initCause(ex);
-						throw iox;
+			}
+			if(dbCol instanceof DbColNumber && (((DbColNumber)dbCol).getMinValue()!=null || ((DbColNumber)dbCol).getMaxValue()!=null)){
+				DbColNumber dbColNum=(DbColNumber)dbCol;
+				String createstmt=null;
+				String action="";
+				if(dbColNum.getMinValue()!=null || dbColNum.getMaxValue()!=null){
+					if(dbColNum.getMaxValue()==null){
+						action=">="+dbColNum.getMinValue();
+					}else if(dbColNum.getMinValue()==null){
+						action="<="+dbColNum.getMaxValue();
+					}else{
+						action="BETWEEN "+dbColNum.getMinValue()+" AND "+dbColNum.getMaxValue();
 					}
 				}
+				String constraintName=createConstraintName(dbTab,"check",dbCol.getName());
+				//  ALTER TABLE ce.classb1 ADD CONSTRAINT classb1_attr_check CHECK (attr BETWEEN 0 AND 50);
+				createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" CHECK( "+dbCol.getName()+" "+action+")";
+				
+				//  ALTER TABLE ce.classb1 DROP CONSTRAINT classb1_t_id_fkey;
+				String dropstmt=null;
+				dropstmt="ALTER TABLE "+sqlTabName+" DROP CONSTRAINT "+constraintName;
+
+				addConstraint(dbTab, constraintName,createstmt, dropstmt);
+				
+			}else if(dbCol instanceof DbColDecimal && (((DbColDecimal)dbCol).getMinValue()!=null || ((DbColDecimal)dbCol).getMaxValue()!=null)){
+				DbColDecimal dbColNum=(DbColDecimal)dbCol;
+				String createstmt=null;
+				String action="";
+				if(dbColNum.getMinValue()!=null || dbColNum.getMaxValue()!=null){
+					if(dbColNum.getMaxValue()==null){
+						action=">="+dbColNum.getMinValue();
+					}else if(dbColNum.getMinValue()==null){
+						action="<="+dbColNum.getMaxValue();
+					}else{
+						action="BETWEEN "+dbColNum.getMinValue()+" AND "+dbColNum.getMaxValue();
+					}
+				}
+				String constraintName=createConstraintName(dbTab,"check",dbCol.getName());
+				//  ALTER TABLE ce.classb1 ADD CONSTRAINT classb1_attr_check CHECK (attr BETWEEN 0 AND 50);
+				createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" CHECK( "+dbCol.getName()+" "+action+")";
+				
+				//  ALTER TABLE ce.classb1 DROP CONSTRAINT classb1_t_id_fkey;
+				String dropstmt=null;
+				dropstmt="ALTER TABLE "+sqlTabName+" DROP CONSTRAINT "+constraintName;
+
+				addConstraint(dbTab, constraintName,createstmt, dropstmt);
 				
 			}
 		}
 	}
+
 }

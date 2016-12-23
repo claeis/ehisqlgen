@@ -51,7 +51,7 @@ public interface Generator {
 		throws java.io.IOException;
 	public void visit2TableEnd(DbTable table)
 		throws java.io.IOException;
-	public void visitColumn(DbColumn column)
+	public void visitColumn(DbTable dbTab,DbColumn column)
 		throws java.io.IOException;
 	/** called before visitColumn
 	 */

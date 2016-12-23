@@ -107,7 +107,24 @@ public class DbColDecimal extends DbColumn
 
   // declare/define something only in the code
   // please fill in/modify the following section
-  // -beg- preserve=no 40506685031A detail_end "DbColDecimal"
+  // -beg- preserve=yes 40506685031A detail_end "DbColDecimal"
+  Double minValue=null;
+  Double maxValue=null;
+  public Double getMinValue() {
+		return minValue;
+	}
+
+	public void setMinValue(Double minValue) {
+		this.minValue = minValue;
+	}
+
+	public Double getMaxValue() {
+		return maxValue;
+	}
+
+	public void setMaxValue(Double maxValue) {
+		this.maxValue = maxValue;
+	}
 
   // -end- 40506685031A detail_end "DbColDecimal"
 

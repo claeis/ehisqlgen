@@ -73,6 +73,7 @@ public class GeneratorJdbc implements Generator {
 		dropLines=new ArrayList();
 		createLines=new ArrayList();
 	}
+	@Override
 	public void visitSchemaBegin(ch.ehi.basics.settings.Settings config, DbSchema schema)
 		throws IOException {
 		conn=(Connection)config.getTransientObject(SqlConfiguration.JDBC_CONNECTION);
@@ -84,22 +85,28 @@ public class GeneratorJdbc implements Generator {
 		}
 	}
 
+	@Override
 	public void visitSchemaEnd(DbSchema schema) throws IOException {
 	}
 
+	@Override
 	public void visit1Begin() throws IOException {
 	}
 
+	@Override
 	public void visit1End() throws IOException {
 	}
 
+	@Override
 	public void visit2Begin() throws IOException {
 	}
 
+	@Override
 	public void visit2End() throws IOException {
 	}
 	
 	protected String colSep=null;
+	@Override
 	public void visit1TableBegin(DbTable tab) throws IOException {
 		String iliname=tab.getIliName();
 		if(iliname!=null){
@@ -118,6 +125,7 @@ public class GeneratorJdbc implements Generator {
 		colSep="";
 	}
 
+	@Override
 	public void visit1TableEnd(DbTable tab) throws IOException {
 		// write primary key
 		for(Iterator idxi=tab.iteratorIndex();idxi.hasNext();){
@@ -179,11 +187,14 @@ public class GeneratorJdbc implements Generator {
 		
 	}
 
+	@Override
 	public void visit2TableBegin(DbTable arg0) throws IOException {
 	}
+	@Override
 	public void visit2TableEnd(DbTable arg0) throws IOException {
 	}
-	public void visitColumn(DbColumn column) throws IOException {
+	@Override
+	public void visitColumn(DbTable dbTab,DbColumn column) throws IOException {
 		String type="";
 		String size="";
 		String notSupported=null;
@@ -218,10 +229,13 @@ public class GeneratorJdbc implements Generator {
 		out.write(getIndent()+colSep+name+" "+type+" "+isNull+newline());
 		colSep=",";
 	}
+	@Override
 	public void visitTableBeginColumn(DbTable arg0) throws IOException {
 	}
+	@Override
 	public void visitTableEndColumn(DbTable arg0) throws IOException {
 	}
+	@Override
 	public void visitIndex(DbIndex idx) throws IOException {
 		if(idx.isUnique()){
 			java.io.StringWriter out = new java.io.StringWriter();
@@ -266,21 +280,29 @@ public class GeneratorJdbc implements Generator {
 			}
 		}
 	}
+	@Override
 	public void visitTableBeginIndex(DbTable arg0) throws IOException {
 	}
+	@Override
 	public void visitTableEndIndex(DbTable arg0) throws IOException {
 	}
+	@Override
 	public void visitConstraint(DbConstraint arg0) throws IOException {
 		
 	}
+	@Override
 	public void visitTableBeginConstraint(DbTable arg0) throws IOException {
 	}
+	@Override
 	public void visitTableEndConstraint(DbTable arg0) throws IOException {
 	}
+	@Override
 	public void visitEnumEle(DbEnumEle arg0) throws IOException {
 	}
+	@Override
 	public void visitTableBeginEnumEle(DbTable arg0) throws IOException {
 	}
+	@Override
 	public void visitTableEndEnumEle(DbTable arg0) throws IOException {
 	}
 	// utilities
@@ -385,15 +407,45 @@ public class GeneratorJdbc implements Generator {
 			e.printStackTrace();
 		}
 	}
+	protected void addConstraint(DbTable dbTab, String constraintName, String createstmt, String dropstmt)
+			throws IOException {
+		addCreateLine(new Stmt(createstmt));
+		addDropLine(new Stmt(dropstmt));
+		
+		if(tableCreated(dbTab.getName())){
+			Statement dbstmt = null;
+			try{
+				try{
+					dbstmt = conn.createStatement();
+					EhiLogger.traceBackendCmd(createstmt);
+					dbstmt.execute(createstmt);
+				}finally{
+					dbstmt.close();
+				}
+			}catch(SQLException ex){
+				IOException iox=new IOException("failed to add constraint "+constraintName+" to table "+dbTab.getName());
+				iox.initCause(ex);
+				throw iox;
+			}
+		}
+	}
 	protected String createConstraintName(DbTable table,String suffix, String... colNames) {
 		int elec=colNames.length+1;
-		int maxLength=getMaxNameLength()-(suffix.length()+1)-1;
+		int suffixLen=0;
+		if(suffix!=null){
+			suffixLen=suffix.length()+1;
+		}
+		int maxLength=getMaxNameLength()-suffixLen-1;
 		int eleLength=maxLength/elec-1;
 		StringBuffer name=new StringBuffer();
 		name.append(shortcutName(table.getName().getName(),eleLength));
 		for(String colName:colNames){
 			name.append("_");
 			name.append(shortcutName(colName,eleLength));
+		}
+		if(suffix!=null){
+			name.append("_");
+			name.append(suffix);
 		}
 		String sqlname=name.toString();
 		String base=sqlname;

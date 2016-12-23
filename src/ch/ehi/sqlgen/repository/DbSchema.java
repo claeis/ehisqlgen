@@ -45,8 +45,8 @@ public class DbSchema
 
   // -end- 40503CC70030 detail_begin "DbSchema"
 
-  // -beg- preserve=no 40503CD0010F code40503CC70030 "table"
-  private java.util.Set table = new java.util.HashSet();
+  // -beg- preserve=yes 40503CD0010F code40503CC70030 "table"
+  private java.util.Collection table = new java.util.HashSet();
   // -end- 40503CD0010F code40503CC70030 "table"
 
   /** add a Table.
@@ -180,6 +180,14 @@ public class DbSchema
 			}
 		}
 		return null;
+	}
+	public java.util.Collection<DbTable> getTables()
+	{
+		return table;
+	}
+	public void setTables(java.util.Collection<DbTable> tables)
+	{
+		table=tables;
 	}
 
   // -end- 40503CC70030 detail_end "DbSchema"

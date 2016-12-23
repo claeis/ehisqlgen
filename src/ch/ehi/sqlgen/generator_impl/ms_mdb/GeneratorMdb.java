@@ -39,6 +39,7 @@ public class GeneratorMdb implements Generator {
 	private BufferedWriter out=null;
 	private TextFileUtility fmt=null;
 	private boolean createSegments=false;
+	@Override
 	public void visitSchemaBegin(ch.ehi.basics.settings.Settings config,DbSchema schema)
 	throws java.io.IOException
 	{
@@ -73,6 +74,7 @@ public class GeneratorMdb implements Generator {
 		}
 
 	}
+	@Override
 	public void visitSchemaEnd(DbSchema schema)
 	throws java.io.IOException
 	{
@@ -102,11 +104,13 @@ public class GeneratorMdb implements Generator {
 		tablec=0;
 		segName=null;
 	}
+	@Override
 	public void visit1Begin()
 		throws java.io.IOException
 	{
 		startSegment();
 	}
+	@Override
 	public void visit1End()
 		throws java.io.IOException
 	{
@@ -125,11 +129,13 @@ public class GeneratorMdb implements Generator {
 		fmt.dec_ind();
 		out.write(fmt.getIndent()+"End Sub"+fmt.newline());
 	}
+	@Override
 	public void visit2Begin()
 		throws java.io.IOException
 	{
 		startSegment();
 	}
+	@Override
 	public void visit2End()
 		throws java.io.IOException
 	{
@@ -148,6 +154,7 @@ public class GeneratorMdb implements Generator {
 		fmt.dec_ind();
 		out.write(fmt.getIndent()+"End Sub"+fmt.newline());
 	}
+	@Override
 	public void visit1TableBegin(DbTable table)
 	throws java.io.IOException
 	{
@@ -187,6 +194,7 @@ public class GeneratorMdb implements Generator {
 		out.write(fmt.getIndent()+"end if"+fmt.newline());
 		fmt.inc_ind();
 	}
+	@Override
 	public void visit1TableEnd( DbTable table)
 	throws java.io.IOException
 	{
@@ -206,6 +214,7 @@ public class GeneratorMdb implements Generator {
 			tablec=0;
 		}
 	}
+	@Override
 	public void visit2TableBegin(DbTable table)
 	throws java.io.IOException
 	{
@@ -238,6 +247,7 @@ public class GeneratorMdb implements Generator {
 		out.write(fmt.getIndent()+"Set tableDef = database.TableDefs(\""+table.getName()+"\")"+fmt.newline());
 		fmt.inc_ind();
 	}
+	@Override
 	public void visit2TableEnd(DbTable table)
 	throws java.io.IOException
 	{
@@ -247,7 +257,8 @@ public class GeneratorMdb implements Generator {
 			tablec=0;
 		}
 	}
-	public void visitColumn(DbColumn column)
+	@Override
+	public void visitColumn(DbTable dbTab,DbColumn column)
 	throws java.io.IOException
 	{
 		String type="";
@@ -318,14 +329,17 @@ public class GeneratorMdb implements Generator {
 	 	}
 
 	}
+	@Override
 	public void visitTableBeginColumn(DbTable table)
 	throws java.io.IOException
 	{
 	}
+	@Override
 	public void visitTableEndColumn(DbTable table)
 	throws java.io.IOException
 	{
 	}
+	@Override
 	public void visitIndex(DbIndex idx)
 	throws java.io.IOException
 	{
@@ -349,15 +363,18 @@ public class GeneratorMdb implements Generator {
 		out.write(fmt.getIndent()+"end if"+fmt.newline());
 
 	}
+	@Override
 	public void visitTableBeginIndex(DbTable table)
 	throws java.io.IOException
 	{
 	}
+	@Override
 	public void visitTableEndIndex(DbTable table)
 	throws java.io.IOException
 	{
 	}
 	private DbTable relTable=null;
+	@Override
 	public void visitConstraint(DbConstraint cnstr)
 	throws java.io.IOException
 	{
@@ -380,17 +397,20 @@ public class GeneratorMdb implements Generator {
 		fmt.dec_ind();
 		out.write(fmt.getIndent()+"end if"+fmt.newline());
 	}
+	@Override
 	public void visitTableBeginConstraint(DbTable table)
 	throws java.io.IOException
 	{
 		relTable=table;
 	}
+	@Override
 	public void visitTableEndConstraint(DbTable table)
 	throws java.io.IOException
 	{
 		relTable=null;
 	}
 	private DbTable enumTable=null;
+	@Override
 	public void visitEnumEle(DbEnumEle ele)
 	throws java.io.IOException
 	{
@@ -398,6 +418,7 @@ public class GeneratorMdb implements Generator {
 		out.write(fmt.getIndent()+"dbAddEnumEle rskey, rsenum, rsnls, rstrsl, \"de\", \""+eleName+"\", \""+eleName+"\", "+ele.getSequence()+fmt.newline());
 
 	}
+	@Override
 	public void visitTableBeginEnumEle(DbTable table)
 	throws java.io.IOException
 	{
@@ -408,6 +429,7 @@ public class GeneratorMdb implements Generator {
 			out.write(fmt.getIndent()+"Set rsenum = database.OpenRecordset(\""+table.getName()+"\", dbOpenTable)"+fmt.newline());
 		}
 	}
+	@Override
 	public void visitTableEndEnumEle(DbTable table)
 	throws java.io.IOException
 	{

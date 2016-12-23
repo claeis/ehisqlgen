@@ -80,7 +80,7 @@ public class GeneratorDriver {
 		java.util.Iterator coli=table.iteratorColumn();
 		while(coli.hasNext()){
 			DbColumn col=(DbColumn)coli.next();
-			gen.visitColumn(col);
+			gen.visitColumn(table,col);
 		}
 		gen.visitTableEndColumn(table);
 

@@ -34,6 +34,7 @@ import java.sql.SQLException;
 
 import ch.ehi.basics.logging.EhiLogger;
 import ch.ehi.basics.settings.Settings;
+import ch.ehi.basics.tools.TopoSort;
 import ch.ehi.sqlgen.generator.SqlConfiguration;
 import ch.ehi.sqlgen.repository.*;
 
@@ -45,6 +46,7 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 
 	private boolean createGeomIdx=false;
 	private String today="";
+	@Override
 	public void visitSchemaBegin(Settings config, DbSchema schema)
 			throws IOException {
 		super.visitSchemaBegin(config, schema);
@@ -52,13 +54,31 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 		if("True".equals(config.getValue(SqlConfiguration.CREATE_GEOM_INDEX))){
 			createGeomIdx=true;
 		}
+		// sort tables 
+		TopoSort topoSort=new TopoSort();
+		for(DbTable table:schema.getTables()){
+			topoSort.add(table);
+			for(Iterator<DbColumn> dbColi=table.iteratorColumn();dbColi.hasNext();){
+				DbColumn dbCol=dbColi.next();
+				if(dbCol.getReferencedTable()!=null){
+					DbTable refTable=schema.findTable(dbCol.getReferencedTable());
+					if(refTable!=null){
+						topoSort.addcond(refTable, table);
+					}
+				}
+			}
+		}
+		topoSort.sort();
+		schema.setTables(topoSort.getResult());
 	}
 
-	public void visitColumn(DbColumn column) throws IOException {
+	@Override
+	public void visitColumn(DbTable dbTab,DbColumn column) throws IOException {
 		String type="";
 		String size="";
 		String notSupported=null;
 		boolean createColNow=true;
+		String createConstraintStmt="";
 		if(column instanceof DbColBoolean){
 			type="BOOLEAN";
 		}else if(column instanceof DbColDateTime){
@@ -70,6 +90,20 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 		}else if(column instanceof DbColDecimal){
 			DbColDecimal col=(DbColDecimal)column;
 			type="DOUBLE";
+			String constraintAction=null;
+			if(col.getMaxValue()!=null || col.getMinValue()!=null){
+				if(col.getMaxValue()==null){
+					constraintAction=">="+col.getMinValue();
+				}else if(col.getMinValue()==null){
+					constraintAction="<="+col.getMaxValue();
+				}else{
+					constraintAction="BETWEEN "+col.getMinValue()+" AND "+col.getMaxValue();
+				}
+			}
+			if(constraintAction!=null){
+				String constraintName=createConstraintName(dbTab,"check",col.getName());
+				createConstraintStmt=" CONSTRAINT "+constraintName+" CHECK( "+col.getName()+" "+constraintAction+")";
+			}
 		}else if(column instanceof DbColGeometry){
 			geomColumns.add((DbColGeometry) column);
 			type=getGpkgGeometryTypename(((DbColGeometry) column).getType());
@@ -80,6 +114,20 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 		}else if(column instanceof DbColNumber){
 			DbColNumber col=(DbColNumber)column;
 			type="INTEGER";
+			String constraintAction=null;
+			if(col.getMaxValue()!=null || col.getMinValue()!=null){
+				if(col.getMaxValue()==null){
+					constraintAction=">="+col.getMinValue();
+				}else if(col.getMinValue()==null){
+					constraintAction="<="+col.getMaxValue();
+				}else{
+					constraintAction="BETWEEN "+col.getMinValue()+" AND "+col.getMaxValue();
+				}
+			}
+			if(constraintAction!=null){
+				String constraintName=createConstraintName(dbTab,"check",col.getName());
+				createConstraintStmt=" CONSTRAINT "+constraintName+" CHECK( "+col.getName()+" "+constraintAction+")";
+			}
 		}else if(column instanceof DbColVarchar){
 			int colsize=((DbColVarchar)column).getSize();
 			if(colsize==DbColVarchar.UNLIMITED){
@@ -104,9 +152,21 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 			// just collect it; process it later
 			indexColumns.add(column);
 		}
+		String fkConstraint="";
+		if(column.getReferencedTable()!=null){
+			String action="";
+			if(column.getOnUpdateAction()!=null){
+				action=action+" ON UPDATE "+column.getOnUpdateAction();
+			}
+			if(column.getOnDeleteAction()!=null){
+				action=action+" ON DELETE "+column.getOnDeleteAction();
+			}
+			String constraintName=createConstraintName(dbTab,"fkey",column.getName());
+			fkConstraint=" CONSTRAINT "+constraintName+" REFERENCES "+column.getReferencedTable().getQName()+action+" DEFERRABLE INITIALLY DEFERRED";
+		}
 		if(createColNow){
 			String name=column.getName();
-			out.write(getIndent()+colSep+name+" "+type+" "+isNull+defaultValue+newline());
+			out.write(getIndent()+colSep+name+" "+type+" "+isNull+defaultValue+fkConstraint+createConstraintStmt+newline());
 			colSep=",";
 		}
 	}
@@ -148,6 +208,7 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 			}
 		}
 	}
+	@Override
 	public void visit1TableEnd(DbTable tab) throws IOException {
 		String sqlTabName=tab.getName().getName();
 		if(tab.getName().getSchema()!=null){
@@ -285,52 +346,5 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 			default:
 				throw new IllegalArgumentException();
 		 }
-	}
-
-	@Override
-	public void visitTableBeginConstraint(DbTable dbTab) throws IOException {
-		super.visitTableBeginConstraint(dbTab);
-		
-		String sqlTabName=dbTab.getName().getQName();
-		for(Iterator dbColi=dbTab.iteratorColumn();dbColi.hasNext();){
-			DbColumn dbCol=(DbColumn) dbColi.next();
-			if(dbCol.getReferencedTable()!=null){
-				String createstmt=null;
-				String action="";
-				if(dbCol.getOnUpdateAction()!=null){
-					action=action+" ON UPDATE "+dbCol.getOnUpdateAction();
-				}
-				if(dbCol.getOnDeleteAction()!=null){
-					action=action+" ON DELETE "+dbCol.getOnDeleteAction();
-				}
-				String constraintName=createConstraintName(dbTab,"fkey",dbCol.getName());
-				//  ALTER TABLE ce.classb1 ADD CONSTRAINT classb1_t_id_fkey FOREIGN KEY ( t_id ) REFERENCES ce.classa1;
-				createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" FOREIGN KEY ( "+dbCol.getName()+" ) REFERENCES "+dbCol.getReferencedTable().getQName()+action+" DEFERRABLE INITIALLY DEFERRED";
-				addCreateLine(new Stmt(createstmt));
-				
-				//  ALTER TABLE ce.classb1 DROP CONSTRAINT classb1_t_id_fkey;
-				String dropstmt=null;
-				dropstmt="ALTER TABLE "+sqlTabName+" DROP CONSTRAINT "+constraintName;
-				addDropLine(new Stmt(dropstmt));
-				
-				if(tableCreated(dbTab.getName())){
-					Statement dbstmt = null;
-					try{
-						try{
-							dbstmt = conn.createStatement();
-							EhiLogger.traceBackendCmd(createstmt);
-							dbstmt.execute(createstmt);
-						}finally{
-							dbstmt.close();
-						}
-					}catch(SQLException ex){
-						IOException iox=new IOException("failed to add fk constraint to table "+dbTab.getName());
-						iox.initCause(ex);
-						throw iox;
-					}
-				}
-				
-			}
-		}
 	}
 }
