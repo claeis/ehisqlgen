@@ -135,6 +135,10 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 			}else{
 				type="TEXT("+Integer.toString(colsize)+")";
 			}
+		}else if(column instanceof DbColBlob){
+			type="BLOB";
+		}else if(column instanceof DbColXml){
+			type="TEXT";
 		}else{
 			type="TEXT";
 		}

@@ -107,6 +107,10 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 			}else{
 				type="varchar("+Integer.toString(colsize)+")";
 			}
+		}else if(column instanceof DbColBlob){
+			type="bytea";
+		}else if(column instanceof DbColXml){
+			type="xml";
 		}else{
 			type="text";
 		}
