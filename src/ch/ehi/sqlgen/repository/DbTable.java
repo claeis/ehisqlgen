@@ -36,7 +36,7 @@ public class DbTable
 {
   private java.util.List column = new java.util.ArrayList();
   private String comment=null;
-  private HashSet<String> constraintNames=new HashSet<String>();
+  private DbSchema schema=null;
 
   /** add a Column.
    *  
@@ -215,7 +215,7 @@ public class DbTable
     index1._linkTable(this);
     String idxName=index1.getName();
     if(idxName!=null){
-    	addConstraintName(idxName);
+    	schema.addConstraintName(idxName);
     }
     return;
   }
@@ -281,7 +281,7 @@ public class DbTable
     index.add(index1);
     String idxName=index1.getName();
     if(idxName!=null){
-    	addConstraintName(idxName);
+    	schema.addConstraintName(idxName);
     }
     return;
   }
@@ -469,29 +469,17 @@ public class DbTable
 		return comment;
 	}
 
-	public boolean addConstraintName(String e) {
-		return constraintNames.add(e);
+	protected void _linkSchema(DbSchema dbschema)
+	{
+		schema=dbschema;
 	}
-
-	public void clearConstraintNames() {
-		constraintNames.clear();
+	protected void _unlinkSchema()
+	{
+		schema=null;
 	}
-
-	public boolean containsConstraintName(String o) {
-		return constraintNames.contains(o);
+	public DbSchema getSchema()
+	{
+		return schema;
 	}
-
-	public Iterator<String> iteratorConstraintNames() {
-		return constraintNames.iterator();
-	}
-
-	public boolean removeConstraintName(String o) {
-		return constraintNames.remove(o);
-	}
-
-	public int sizeConstraintNames() {
-		return constraintNames.size();
-	}
-
 }
 

@@ -450,9 +450,10 @@ public class GeneratorJdbc implements Generator {
 		String sqlname=name.toString();
 		String base=sqlname;
 		int c=1;
-		while(table.containsConstraintName(sqlname)){
+		while(table.getSchema().containsConstraintName(sqlname)){
 			sqlname=base+Integer.toString(c++);
 		}
+		table.getSchema().addConstraintName(sqlname);
 		return sqlname;
 	}
 

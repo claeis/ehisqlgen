@@ -25,7 +25,9 @@
 package ch.ehi.sqlgen.repository;
 // -end- 40503CC70030 package "DbSchema"
 
+import java.util.HashSet;
 import java.util.Iterator;
+
 
 // -beg- preserve=no 40503CC70030 autoimport "DbSchema"
 import ch.ehi.sqlgen.repository.DbTable;
@@ -46,7 +48,7 @@ public class DbSchema
   // -end- 40503CC70030 detail_begin "DbSchema"
 
   // -beg- preserve=yes 40503CD0010F code40503CC70030 "table"
-  private java.util.Collection table = new java.util.HashSet();
+  private java.util.Collection<DbTable> table = new java.util.ArrayList<DbTable>();
   // -end- 40503CD0010F code40503CC70030 "table"
 
   /** add a Table.
@@ -61,8 +63,9 @@ public class DbSchema
   public void addTable(DbTable table1)
   // -end- 40503CD0010F add_head40503CC70030 "DbSchema::addTable"
   {
-    // -beg- preserve=no 40503CD0010F add_body40503CC70030 "DbSchema::addTable"
+    // -beg- preserve=yes 40503CD0010F add_body40503CC70030 "DbSchema::addTable"
     table.add(table1);
+    table1._linkSchema(this);
     return;
     // -end- 40503CD0010F add_body40503CC70030 "DbSchema::addTable"
   }
@@ -74,14 +77,14 @@ public class DbSchema
   public DbTable removeTable(DbTable table1)
   // -end- 40503CD0010F remove_head40503CC70030 "DbSchema::removeTable"
   {
-    // -beg- preserve=no 40503CD0010F remove_body40503CC70030 "DbSchema::removeTable"
+    // -beg- preserve=yes 40503CD0010F remove_body40503CC70030 "DbSchema::removeTable"
     DbTable ret=null;
     if(table1==null || !table.contains(table1)){
       throw new java.lang.IllegalArgumentException("cannot remove null or unknown object");
     }
     ret = table1;
     table.remove(table1);
-    
+    table1._unlinkSchema();
     return ret;
     // -end- 40503CD0010F remove_body40503CC70030 "DbSchema::removeTable"
   }
@@ -117,11 +120,14 @@ public class DbSchema
   public void clearTable()
   // -end- 40503CD0010F remove_all_head40503CC70030 "DbSchema::clearTable"
   {
-    // -beg- preserve=no 40503CD0010F remove_all_body40503CC70030 "DbSchema::clearTable"
-    if(sizeTable()>0){
-      table.clear();
-      
-    }
+    // -beg- preserve=yes 40503CD0010F remove_all_body40503CC70030 "DbSchema::clearTable"
+		if (sizeTable() > 0) {
+			for (DbTable tablei : table) {
+				tablei._unlinkSchema();
+			}
+			table.clear();
+
+		}
     // -end- 40503CD0010F remove_all_body40503CC70030 "DbSchema::clearTable"
   }
 
@@ -187,7 +193,43 @@ public class DbSchema
 	}
 	public void setTables(java.util.Collection<DbTable> tables)
 	{
+		clearTable();
 		table=tables;
+		for (DbTable tablei : table) {
+			tablei._linkSchema(this);
+		}
+	}
+	private HashSet<String> constraintNames=new HashSet<String>();
+	public boolean addConstraintName(String e) {
+		return constraintNames.add(e);
+	}
+
+	public void clearConstraintNames() {
+		constraintNames.clear();
+	}
+
+	public boolean containsConstraintName(String o) {
+		if(constraintNames.contains(o)){
+			return true;
+		}
+		for (DbTable tablei : table) {
+			if(tablei.getName().getName().equals(o)){
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public Iterator<String> iteratorConstraintNames() {
+		return constraintNames.iterator();
+	}
+
+	public boolean removeConstraintName(String o) {
+		return constraintNames.remove(o);
+	}
+
+	public int sizeConstraintNames() {
+		return constraintNames.size();
 	}
 
   // -end- 40503CC70030 detail_end "DbSchema"
