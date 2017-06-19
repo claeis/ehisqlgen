@@ -32,6 +32,7 @@ import java.sql.Statement;
 import java.sql.SQLException;
 
 import ch.ehi.basics.logging.EhiLogger;
+import ch.ehi.sqlgen.DbUtility;
 import ch.ehi.sqlgen.generator.Generator;
 import ch.ehi.sqlgen.generator.TextFileUtility;
 import ch.ehi.sqlgen.generator.SqlConfiguration;
@@ -149,7 +150,7 @@ public class GeneratorJdbc implements Generator {
 		addCreateLine(new Stmt(stmt));
 		addDropLine(new Stmt("DROP TABLE "+tab.getName()));
 		out=null;
-		if(tableExists(tab.getName())){
+		if(DbUtility.tableExists(conn,tab.getName())){
 			if(tab.isDeleteDataIfTableExists()){
 				Statement dbstmt = null;
 				try{
@@ -334,48 +335,12 @@ public class GeneratorJdbc implements Generator {
 		return createLines.iterator();
 	}
 	/** tests if a table with the given name exists
+	 * @deprecated
 	 */
 	public boolean tableExists(DbTableName tableName)
 	throws IOException
 	{
-		try{
-			boolean supportsMixedCase=conn.getMetaData().supportsMixedCaseIdentifiers();
-			String catalog=conn.getCatalog();
-			java.sql.DatabaseMetaData meta=conn.getMetaData();
-			// on oracle getUserName() returns schemaname
-			// on PostgreSQL "public" is the defualt schema
-			String schema=tableName.getSchema();
-			if(schema==null){
-				if(conn.getMetaData().getURL().startsWith("jdbc:postgresql:")){
-					schema="public";
-				}else{
-					schema=meta.getUserName();
-				}
-			}
-			java.sql.ResultSet rs=null;
-			try{
-				//rs=meta.getTables(catalog,schema,tableName.toUpperCase(),null);
-				rs=meta.getTables(null,null,null,null);
-				while(rs.next()){
-					String db_catalogName=rs.getString("TABLE_CAT");
-					String db_schemaName=rs.getString("TABLE_SCHEM");
-					String db_tableName=rs.getString("TABLE_NAME");
-					//EhiLogger.debug(db_catalogName+"."+db_schemaName+"."+db_tableName);
-					if((db_schemaName==null || db_schemaName.equalsIgnoreCase(schema)) && db_tableName.equalsIgnoreCase(tableName.getName())){
-						//EhiLogger.debug(db_catalogName+"."+db_schemaName+"."+db_tableName);
-						// table exists
-						return true;
-					}
-				}
-			}finally{
-				if(rs!=null)rs.close();
-			}
-		}catch(java.sql.SQLException ex){
-			IOException iox=new IOException("failed to check if table "+tableName+" exists");
-			iox.initCause(ex);
-			throw iox;
-		}
-		return false;
+		return DbUtility.tableExists(conn, tableName);
 	}
 	/** tests if a table with the given name was created in phase1
 	 */
@@ -392,18 +357,16 @@ public class GeneratorJdbc implements Generator {
 		try {
 			tst.conn=DriverManager.getConnection(dburl, dbusr, dbpwd);
 			DbTableName tab=new DbTableName("t_ili2db_imports");
-			System.out.println(tab.toString()+" "+tst.tableExists(tab));
+			System.out.println(tab.toString()+" "+DbUtility.tableExists(tst.conn,tab));
 			tab=new DbTableName("test1b");
-			System.out.println(tab.toString()+" "+tst.tableExists(tab));
+			System.out.println(tab.toString()+" "+DbUtility.tableExists(tst.conn,tab));
 			tab=new DbTableName("schema2","test2");
-			System.out.println(tab.toString()+" "+tst.tableExists(tab));
+			System.out.println(tab.toString()+" "+DbUtility.tableExists(tst.conn,tab));
 			tab=new DbTableName("schema2","test2b");
-			System.out.println(tab.toString()+" "+tst.tableExists(tab));
+			System.out.println(tab.toString()+" "+DbUtility.tableExists(tst.conn,tab));
 			tab=new DbTableName("schema3","test3");
-			System.out.println(tab.toString()+" "+tst.tableExists(tab));
+			System.out.println(tab.toString()+" "+DbUtility.tableExists(tst.conn,tab));
 		} catch (SQLException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}

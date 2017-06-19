@@ -32,6 +32,7 @@ import java.sql.SQLException;
 
 import ch.ehi.basics.logging.EhiLogger;
 import ch.ehi.basics.settings.Settings;
+import ch.ehi.sqlgen.DbUtility;
 import ch.ehi.sqlgen.generator.SqlConfiguration;
 import ch.ehi.sqlgen.repository.*;
 
@@ -144,7 +145,7 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 	
 	@Override
 	public void visitTableEndColumn(DbTable tab) throws IOException {
-		boolean tableExists=tableExists(tab.getName());
+		boolean tableExists=DbUtility.tableExists(conn,tab.getName());
 	}
 
 	@Override
@@ -153,7 +154,7 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 		if(tab.getName().getSchema()!=null){
 			sqlTabName=tab.getName().getSchema()+"."+sqlTabName;
 		}
-		boolean tableExists=tableExists(tab.getName());
+		boolean tableExists=DbUtility.tableExists(conn,tab.getName());
 		super.visit1TableEnd(tab);
 		for(DbColGeometry geo:geomColumns){
 			String stmt=null;

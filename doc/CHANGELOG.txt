@@ -1,3 +1,7 @@
+ehisqlgen 1.11.0 (2017-06-19)
+---------------------------
+- added DbUtility, moved from ili2db
+
 ehisqlgen 1.10.0 (2017-04-02)
 ---------------------------
 - add DbColBlob
