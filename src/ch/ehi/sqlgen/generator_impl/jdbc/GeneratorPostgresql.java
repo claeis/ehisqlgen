@@ -182,7 +182,6 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 			}
 			out.write(")"+newline());
 			String stmt=out.toString();
-			System.out.println(stmt);
 			addCreateLine(new Stmt(stmt));
 			out=null;
 			if(createdTables.contains(tab.getName())){
