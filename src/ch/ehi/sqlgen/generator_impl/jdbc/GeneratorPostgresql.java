@@ -34,6 +34,7 @@ import ch.ehi.basics.logging.EhiLogger;
 import ch.ehi.basics.settings.Settings;
 import ch.ehi.sqlgen.DbUtility;
 import ch.ehi.sqlgen.generator.SqlConfiguration;
+import ch.ehi.sqlgen.generator_impl.jdbc.GeneratorJdbc.Stmt;
 import ch.ehi.sqlgen.repository.*;
 
 /**
@@ -146,6 +147,61 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 	@Override
 	public void visitTableEndColumn(DbTable tab) throws IOException {
 		boolean tableExists=DbUtility.tableExists(conn,tab.getName());
+	}
+
+	@Override
+	public void visitIndex(DbIndex idx) throws IOException {
+		if(idx.isUnique()){
+			java.io.StringWriter out = new java.io.StringWriter();
+			DbTable tab=idx.getTable();
+			String tableName=tab.getName().getQName();
+			String constraintName=idx.getName();
+			if(constraintName==null){
+				String colNames[]=new String[idx.sizeAttr()];
+				int i=0;
+				for(Iterator attri=idx.iteratorAttr();attri.hasNext();){
+					DbColumn attr=(DbColumn)attri.next();
+					colNames[i++]=attr.getName();
+				}
+				constraintName=createConstraintName(tab,"key", colNames);
+			}
+			out.write(getIndent()+"CREATE UNIQUE INDEX "+constraintName+" ON "+tableName+" (");
+			String sep="";
+			for(Iterator attri=idx.iteratorAttr();attri.hasNext();){
+				DbColumn attr=(DbColumn)attri.next();
+				
+				if (attr instanceof DbColGeometry) {
+					if (((DbColGeometry) attr).getType() == DbColGeometry.POINT) {
+						// only for points?
+					}
+					out.write(sep+"ST_AsBinary("+attr.getName()+")");
+				} else {
+					out.write(sep+attr.getName());
+				}				
+				sep=",";
+			}
+			out.write(")"+newline());
+			String stmt=out.toString();
+			System.out.println(stmt);
+			addCreateLine(new Stmt(stmt));
+			out=null;
+			if(createdTables.contains(tab.getName())){
+				Statement dbstmt = null;
+				try{
+					try{
+						dbstmt = conn.createStatement();
+						EhiLogger.traceBackendCmd(stmt);
+						dbstmt.executeUpdate(stmt);
+					}finally{
+						dbstmt.close();
+					}
+				}catch(SQLException ex){
+					IOException iox=new IOException("failed to add UNIQUE to table "+tab.getName());
+					iox.initCause(ex);
+					throw iox;
+				}
+			}
+		}
 	}
 
 	@Override
