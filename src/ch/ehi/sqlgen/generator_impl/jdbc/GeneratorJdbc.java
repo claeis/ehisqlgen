@@ -49,7 +49,7 @@ public class GeneratorJdbc implements Generator {
 	protected Connection conn=null;
 	private ArrayList dropLines=null; // list<AbstractStmt>
 	private ArrayList createLines=null;  // list<AbstractStmt>
-	private java.util.HashSet<DbTableName> createdTables=new java.util.HashSet<DbTableName>();
+	protected java.util.HashSet<DbTableName> createdTables=new java.util.HashSet<DbTableName>();
 	private static final String MAX_SQLNAME_LENGTH="ch.ehi.ili2db.maxSqlNameLength";
 	public abstract class AbstractStmt {
 		private String line=null;
