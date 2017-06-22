@@ -1,3 +1,7 @@
+ehisqlgen 1.11.1 (2017-06-22)
+---------------------------
+- PG: unique constraints changed to ST_AsBinary() for geometries 
+
 ehisqlgen 1.11.0 (2017-06-19)
 ---------------------------
 - added DbUtility, moved from ili2db
