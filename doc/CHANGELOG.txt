@@ -1,3 +1,7 @@
+ehisqlgen 1.11.2 (2017-08-18)
+---------------------------
+- added DbUtility.fgdbTableExists()
+
 ehisqlgen 1.11.1 (2017-06-22)
 ---------------------------
 - PG: unique constraints changed to ST_AsBinary() for geometries 

@@ -38,8 +38,11 @@ public class DbUtility {
 	{
 		try{
 			java.sql.DatabaseMetaData meta=conn.getMetaData();
-			if(conn.getMetaData().getURL().startsWith("jdbc:postgresql:")){
+			if(meta.getURL().startsWith("jdbc:postgresql:")){
 				return pgTableExists(conn,tableName);
+			}
+			if(meta.getURL().startsWith("jdbc:ili2fgdb:")){
+				return fgdbTableExists(conn, tableName);
 			}
 			String catalog=conn.getCatalog();
 			// on oracle getUserName() returns schemaname
@@ -74,6 +77,30 @@ public class DbUtility {
 			throw new IllegalStateException("failed to check if table "+tableName+" exists",ex);
 		}
 		return false;
+	}
+	private static boolean fgdbTableExists(Connection conn,
+			DbTableName tableName) throws SQLException {
+		Statement stmt=null;
+		ResultSet rs=null;
+		try {
+			stmt=conn.createStatement();
+			rs=stmt.executeQuery("SELECT NULL AS dy FROM "+tableName.getName()+"");
+		} catch (SQLException e) {
+			if(e.getErrorCode()==-2147220655){
+				return false;
+			}
+			throw e;
+		}finally{
+			if(rs!=null){
+				rs.close();
+				rs=null;
+			}
+			if(stmt!=null){
+				stmt.close();
+				stmt=null;
+			}
+		}
+		return true;
 	}
 	private static boolean pgTableExists(Connection conn, DbTableName tableName) {
 		String schema=tableName.getSchema();
