@@ -116,6 +116,14 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 		}else{
 			type="text";
 		}
+		String array="";
+		if(column.getArraySize()!=DbColumn.NOT_AN_ARRAY) {
+			if(column.getArraySize()==DbColumn.UNLIMITED_ARRAY) {
+				array="ARRAY ";
+			}else {
+				array="ARRAY["+column.getArraySize()+"] ";
+			}
+		}
 		String isNull=column.isNotNull()?"NOT NULL":"NULL";
 		if(column.isPrimaryKey()){
 			isNull="PRIMARY KEY";
@@ -132,7 +140,7 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 		}
 		if(createColNow){
 			String name=column.getName();
-			out.write(getIndent()+colSep+name+" "+type+" "+isNull+defaultValue+newline());
+			out.write(getIndent()+colSep+name+" "+type+" "+array+isNull+defaultValue+newline());
 			colSep=",";
 		}
 	}

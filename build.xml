@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project basedir="." default="bindist" name="ehisqlgen">
+<project basedir="." default="jar" name="ehisqlgen" xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 
   <!-- set global properties for this build -->
   <property name="src" value="${basedir}/src"/>
   <property name="build" value="${basedir}/build"/>
   <property name="dist" value="${basedir}/dist"/>
+  <property file="user.properties" prefix="user."/>
+  <property name="groupId" value="ch.ehi"/>
+  <property name="artifactId" value="${ant.project.name}"/>
+  <property name="release" value=""/>
 
   <target name="init">
     <!-- Create the time stamp -->
     <tstamp/>
-    <property name="versionfile" value="${src}/ch/ehi/ehisqlgen/Version.properties"/>
+    <property name="versionfile" value="${src}/ch/ehi/sqlgen/Version.properties"/>
     <property name="projectjar" value="${build}/jar/${ant.project.name}.jar"/>
     <!-- Create the build directory structure used by compile -->
     <mkdir dir="${build}"/>
@@ -17,6 +21,36 @@
     <mkdir dir="${dist}"/>
   </target>
 
+  <target depends="init,buildnr" name="pom">
+  	<artifact:pom id="mypomE" groupId="${groupId}" artifactId="${artifactId}" version="${buildnr}" name="ehibasics">
+	  </artifact:pom>
+	  <artifact:writepom pomRefId="mypomE" file="build/pom.xml"/>
+	<artifact:pom id="mypom" file="build/pom.xml" />
+  </target>
+  <target depends="init,pom" name="install">
+	  <artifact:install file="build/jar/ehisqlgen.jar">
+		<artifact:pom refid="mypom"/>
+	  </artifact:install>
+  </target>
+  <target depends="init,pom" name="deploy">
+	  <artifact:install-provider artifactId="wagon-ftp" version="3.0.0"/>
+  <artifact:deploy file="build/jar/ehisqlgen.jar">
+    <remoteRepository url="ftp://ftp.interlis.ch">
+    	<authentication username="${user.repos_usr}" password="${user.repos_pwd}"/>
+    </remoteRepository>
+    <pom refid="mypom"/>
+  </artifact:deploy>    
+  </target>
+  
+  <target depends="init" name="buildnr">
+    <property file="${versionfile}" prefix="buildnr."/>
+    <condition property="SNAPSHOT" value="" else="-SNAPSHOT">
+       <length string="${release}" trim="true" when="greater" length="0"/>
+    </condition>
+    <property name="buildnr" value="${buildnr.versionMajor}.${buildnr.versionMinor}.${buildnr.versionMicro}${SNAPSHOT}"/>
+    <!--  <property name="buildnr" value="${DSTAMP}"/>  -->
+  </target>
+  
   <target depends="init" name="compile">
     <!-- Compile the java code from ${src} into ${build}/classes -->
     <mkdir dir="${build}/classes"/>

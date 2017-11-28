@@ -28,6 +28,8 @@ import java.util.HashMap;
 
 public class DbColumn
 {
+	public static final int NOT_AN_ARRAY = 0;
+	public static final int UNLIMITED_ARRAY = -1;
 	private String comment=null;
   private String name;
   private String defaultValue=null;
@@ -35,6 +37,7 @@ public class DbColumn
   private String onDeleteAction=null;
   private String onUpdateAction=null;
   private boolean index=false;
+  private int arraySize=NOT_AN_ARRAY; 
 
   /** get current value of name
    *  @see #setName
@@ -187,6 +190,14 @@ public class DbColumn
 
 	public void setOnUpdateAction(String onUpdateAction) {
 		this.onUpdateAction = onUpdateAction;
+	}
+
+	public int getArraySize() {
+		return arraySize;
+	}
+
+	public void setArraySize(int arraySize) {
+		this.arraySize = arraySize;
 	}
 	
 }
