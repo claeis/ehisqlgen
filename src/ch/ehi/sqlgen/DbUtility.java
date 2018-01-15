@@ -310,7 +310,7 @@ public class DbUtility {
 				}
 				stmt.append('\'');
 			}else if(c==';'){
-				stmt.append((char)c);
+				// ignore ';'; not part of sql statement
 				// skip end of line
 				c=reader.read();
 				if(c=='\n'){

@@ -22,7 +22,7 @@ public class DbUtilityReadSqlStmtTest {
 	public void testSingleStmt() throws IOException {
 		PushbackReader reader=new PushbackReader(new StringReader("SELECT;"));
 		String stmt1=DbUtility.readSqlStmt(reader);
-		assertEquals("SELECT;",stmt1);
+		assertEquals("SELECT",stmt1);
 		String stmtEnd=DbUtility.readSqlStmt(reader);
 		assertNull(stmtEnd);
 	}
@@ -30,9 +30,9 @@ public class DbUtilityReadSqlStmtTest {
 	public void test2Stmt1Line() throws IOException {
 		PushbackReader reader=new PushbackReader(new StringReader("SELECT;DROP;"));
 		String stmt1=DbUtility.readSqlStmt(reader);
-		assertEquals("SELECT;",stmt1);
+		assertEquals("SELECT",stmt1);
 		String stmt2=DbUtility.readSqlStmt(reader);
-		assertEquals("DROP;",stmt2);
+		assertEquals("DROP",stmt2);
 		String stmtEnd=DbUtility.readSqlStmt(reader);
 		assertNull(stmtEnd);
 	}
@@ -40,9 +40,9 @@ public class DbUtilityReadSqlStmtTest {
 	public void test2StmtLf() throws IOException {
 		PushbackReader reader=new PushbackReader(new StringReader("SELECT;\nDROP;"));
 		String stmt1=DbUtility.readSqlStmt(reader);
-		assertEquals("SELECT;",stmt1);
+		assertEquals("SELECT",stmt1);
 		String stmt2=DbUtility.readSqlStmt(reader);
-		assertEquals("DROP;",stmt2);
+		assertEquals("DROP",stmt2);
 		String stmtEnd=DbUtility.readSqlStmt(reader);
 		assertNull(stmtEnd);
 	}
@@ -50,9 +50,9 @@ public class DbUtilityReadSqlStmtTest {
 	public void testMultipleNewlines() throws IOException {
 		PushbackReader reader=new PushbackReader(new StringReader("\n\nSELECT;\n\nDROP;\n\n"));
 		String stmt1=DbUtility.readSqlStmt(reader);
-		assertEquals("SELECT;",stmt1);
+		assertEquals("SELECT",stmt1);
 		String stmt2=DbUtility.readSqlStmt(reader);
-		assertEquals("DROP;",stmt2);
+		assertEquals("DROP",stmt2);
 		String stmtEnd=DbUtility.readSqlStmt(reader);
 		assertNull(stmtEnd);
 	}
@@ -66,7 +66,7 @@ public class DbUtilityReadSqlStmtTest {
 	public void testCmtStmt() throws IOException {
 		PushbackReader reader=new PushbackReader(new StringReader("-- a comment\nSELECT;"));
 		String stmt1=DbUtility.readSqlStmt(reader);
-		assertEquals("SELECT;",stmt1);
+		assertEquals("SELECT",stmt1);
 		String stmtEnd=DbUtility.readSqlStmt(reader);
 		assertNull(stmtEnd);
 	}
@@ -74,7 +74,7 @@ public class DbUtilityReadSqlStmtTest {
 	public void testCmtStmtCmt() throws IOException {
 		PushbackReader reader=new PushbackReader(new StringReader("-- a comment\nSELECT;-- comment\n-- more comment "));
 		String stmt1=DbUtility.readSqlStmt(reader);
-		assertEquals("SELECT;",stmt1);
+		assertEquals("SELECT",stmt1);
 		String stmtEnd=DbUtility.readSqlStmt(reader);
 		assertNull(stmtEnd);
 	}
