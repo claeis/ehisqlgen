@@ -35,6 +35,14 @@ public class SqlReaderTest {
 		String stmtEnd=SqlReader.readSqlStmt(reader,null);
 		assertNull(stmtEnd);
 	}
+    @Test
+    public void test1Stmt2Line() throws IOException {
+        PushbackReader reader=new PushbackReader(new StringReader("SELECT\nFROM;"));
+        String stmt1=SqlReader.readSqlStmt(reader,null);
+        assertEquals("SELECT FROM",stmt1);
+        String stmtEnd=SqlReader.readSqlStmt(reader,null);
+        assertNull(stmtEnd);
+    }
 	@Test
 	public void test2StmtLf() throws IOException {
 		PushbackReader reader=new PushbackReader(new StringReader("SELECT;\nDROP;"));

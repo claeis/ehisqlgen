@@ -60,11 +60,17 @@ public class SqlReader {
     			if(c!=-1 && c!='\r'){
     				reader.unread(c);
     			}
+    			if(stmt.length()>0) {
+                    stmt.append(' ');
+    			}
     		}else if(c=='\r'){
     			c=reader.read();
     			if(c!=-1 && c!='\n'){
     				reader.unread(c);
     			}
+                if(stmt.length()>0) {
+                    stmt.append(' ');
+                }
     		}else{
     			stmt.append((char)c);
     		}
