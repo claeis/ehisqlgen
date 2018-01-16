@@ -76,10 +76,11 @@ public class SqlReader {
     		}
     		c=reader.read();
     	}
-    	if(stmt.length()==0){
+    	String ret=stmt.toString().trim();
+    	if(ret.length()==0){
     		return null;
     	}
-    	return stmt.toString();
+    	return ret;
     }
     private static void readQuotedString(int c, java.io.PushbackReader reader, StringBuffer stmt,char quote) throws IOException {
         stmt.append((char)c);

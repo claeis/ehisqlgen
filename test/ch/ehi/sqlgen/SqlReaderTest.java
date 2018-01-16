@@ -25,6 +25,14 @@ public class SqlReaderTest {
 		String stmtEnd=SqlReader.readSqlStmt(reader,null);
 		assertNull(stmtEnd);
 	}
+    @Test
+    public void testSingleStmtLeadingTrailingSpaces() throws IOException {
+        PushbackReader reader=new PushbackReader(new StringReader(" SELECT; "));
+        String stmt1=SqlReader.readSqlStmt(reader,null);
+        assertEquals("SELECT",stmt1);
+        String stmtEnd=SqlReader.readSqlStmt(reader,null);
+        assertNull(stmtEnd);
+    }
 	@Test
 	public void test2Stmt1Line() throws IOException {
 		PushbackReader reader=new PushbackReader(new StringReader("SELECT;DROP;"));
