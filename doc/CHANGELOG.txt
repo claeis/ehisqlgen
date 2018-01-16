@@ -1,5 +1,6 @@
-ehisqlgen 1.13.0 (2018-01-xx)
+ehisqlgen 1.13.0 (2018-01-16)
 ---------------------------
+- support parameters in sql scripts read by SqlReader
 - skip ';' in DbUtility.readSqlStmt(); not part of SQL statement
 
 ehisqlgen 1.12.0 (2017-11-28)
