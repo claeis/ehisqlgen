@@ -69,7 +69,18 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 				}
 			}
 		}
-		topoSort.sort();
+		if(!topoSort.sort()) {
+		      StringBuffer loopele=new StringBuffer();
+		      Iterator resi=topoSort.getResult().iterator();
+		      String sep="";
+		      while(resi.hasNext()){
+		          DbTable res=(DbTable)resi.next();
+		        loopele.append(sep);
+		        loopele.append(res.getName().getName());
+		        sep="->";
+		      }
+		      throw new IOException("loop in create table statements: "+loopele.toString());
+		}
 		schema.setTables(topoSort.getResult());
 	}
 
