@@ -1,5 +1,8 @@
 LATEST SNAPSHOT
 ---------------
+
+ehisqlgen 1.13.4 (2018-03-06)
+---------------------------
 - GPKG: verify that create table statements are in a valid order
 
 ehisqlgen 1.13.2 (2018-01-16)
