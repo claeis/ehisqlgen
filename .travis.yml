@@ -5,10 +5,23 @@ branches:
     - master
     - stable
 
+addons:
+  postgresql: "9.6"
+  apt:
+    packages:
+    - postgresql-9.6-postgis-2.3
+
 install: true
   
+before_script:
+    - psql -c 'create database ioxwkf;' -U postgres
+    - psql -c 'select version();' -d ehisqlgen -U postgres
+    - psql -c 'create extension postgis;' -d ehisqlgen -U postgres
+    - psql -c 'create extension "uuid-ossp";' -d ehisqlgen -U postgres
+    - psql -c 'select postgis_full_version();' -d ehisqlgen -U postgres
+  
 script: 
-  - gradle build 
+  - gradle  -Ddburl=jdbc:postgresql:ehisqlgen -Ddbusr=postgres build 
 after_failure:
   - cat  build/junitreport/TEST-*.txt
 deploy:
