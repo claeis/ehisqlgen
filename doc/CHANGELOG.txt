@@ -1,5 +1,6 @@
 LATEST SNAPSHOT
 ---------------
+- skip ';' without a stmt in front of it
 
 ehisqlgen 1.13.4 (2018-03-06)
 ---------------------------

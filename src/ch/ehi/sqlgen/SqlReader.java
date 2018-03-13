@@ -54,7 +54,9 @@ public class SqlReader {
     					
     				}
     			}
-    			break;
+                if(stmt.toString().trim().length()>0) {
+                    break;
+                }
     		}else if(c=='\n'){
     			c=reader.read();
     			if(c!=-1 && c!='\r'){
