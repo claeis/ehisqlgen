@@ -1,4 +1,5 @@
 .svn/
+.gradle/
 build/
 dist/
 support/
