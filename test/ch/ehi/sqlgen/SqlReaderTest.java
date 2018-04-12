@@ -154,12 +154,22 @@ public class SqlReaderTest {
         assertNull(stmtEnd);
     }
     @Test
-    public void testParamEscape() throws IOException {
+    public void testParamEscapeDollar() throws IOException {
         PushbackReader reader=new PushbackReader(new StringReader("c$${aaa}c"));
         HashMap<String,String> params=new HashMap<String,String>();
         params.put("aaa", "bbb");
         String stmt1=SqlReader.readSqlStmt(reader,params);
         assertEquals("c${aaa}c",stmt1);
+        String stmtEnd=SqlReader.readSqlStmt(reader,params);
+        assertNull(stmtEnd);
+    }
+    @Test
+    public void testParamEscapeOther() throws IOException {
+        PushbackReader reader=new PushbackReader(new StringReader("c$aaac"));
+        HashMap<String,String> params=new HashMap<String,String>();
+        params.put("aaa", "bbb");
+        String stmt1=SqlReader.readSqlStmt(reader,params);
+        assertEquals("c$aaac",stmt1);
         String stmtEnd=SqlReader.readSqlStmt(reader,params);
         assertNull(stmtEnd);
     }
