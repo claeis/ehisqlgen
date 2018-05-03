@@ -1,6 +1,7 @@
 LATEST SNAPSHOT
 ---------------
 - skip ';' without a stmt in front of it
+- GPKG: ARRAY throws UnsupportedOperationException 
 
 ehisqlgen 1.13.4 (2018-03-06)
 ---------------------------

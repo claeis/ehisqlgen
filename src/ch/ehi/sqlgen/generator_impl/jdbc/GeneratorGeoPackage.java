@@ -91,6 +91,9 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 		String notSupported=null;
 		boolean createColNow=true;
 		String createConstraintStmt="";
+        if(column.getArraySize()!=DbColumn.NOT_AN_ARRAY) {
+            throw new UnsupportedOperationException();
+        }
 		if(column instanceof DbColBoolean){
 			type="BOOLEAN";
 		}else if(column instanceof DbColDateTime){
