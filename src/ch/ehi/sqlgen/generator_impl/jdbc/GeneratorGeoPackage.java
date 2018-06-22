@@ -26,6 +26,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.io.IOException;
 import java.sql.Connection;
@@ -72,11 +73,18 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 		if(!topoSort.sort()) {
 		      StringBuffer loopele=new StringBuffer();
 		      Iterator resi=topoSort.getResult().iterator();
+		      ArrayList<String> names=new ArrayList<String>();
+              while(resi.hasNext()){
+                  DbTable res=(DbTable)resi.next();
+                names.add(res.getName().getName());
+              }
+              names.remove(0);
+              Collections.rotate(names,names.indexOf(Collections.min(names)));
+              names.add(names.get(0));
 		      String sep="";
-		      while(resi.hasNext()){
-		          DbTable res=(DbTable)resi.next();
+		      for(String name:names){
 		        loopele.append(sep);
-		        loopele.append(res.getName().getName());
+		        loopele.append(name);
 		        sep="->";
 		      }
 		      throw new IOException("loop in create table statements: "+loopele.toString());
