@@ -78,8 +78,10 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
                   DbTable res=(DbTable)resi.next();
                 names.add(res.getName().getName());
               }
-              names.remove(0);
-              Collections.rotate(names,names.indexOf(Collections.min(names)));
+              if(names.size()>1) {
+                  names.remove(0);
+                  Collections.rotate(names,names.indexOf(Collections.min(names)));
+              }
               names.add(names.get(0));
 		      String sep="";
 		      for(String name:names){

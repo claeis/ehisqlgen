@@ -1,5 +1,6 @@
 LATEST SNAPSHOT
 ---------------
+- GPKG: fixed java.util.NoSuchElementException if recursive FK
 
 ehisqlgen 1.13.5 (2018-06-22)
 ---------------------------
