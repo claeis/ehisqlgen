@@ -269,28 +269,30 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 			addDropLine(new Stmt(dropstmt1));
 			String dropstmt2="DELETE FROM gpkg_geometry_columns WHERE table_name=\'"+tab.getName().getName()+"\' AND column_name=\'"+geo.getName()+"\'";
 			addDropLine(new Stmt(dropstmt2));
-			if(!tableExists){
-				Statement dbstmt = null;
-				try{
-					try{
-						dbstmt = conn.createStatement();
-						EhiLogger.traceBackendCmd(stmt1);
-						dbstmt.execute(stmt1);
-					}finally{
-						dbstmt.close();
-					}
-					try{
-						dbstmt = conn.createStatement();
-						EhiLogger.traceBackendCmd(stmt2);
-						dbstmt.execute(stmt2);
-					}finally{
-						dbstmt.close();
-					}
-				}catch(SQLException ex){
-					IOException iox=new IOException("failed to add geometry column "+geo.getName()+" to table "+tab.getName());
-					iox.initCause(ex);
-					throw iox;
-				}
+			if(conn!=null) {
+	            if(!tableExists){
+	                Statement dbstmt = null;
+	                try{
+	                    try{
+	                        dbstmt = conn.createStatement();
+	                        EhiLogger.traceBackendCmd(stmt1);
+	                        dbstmt.execute(stmt1);
+	                    }finally{
+	                        dbstmt.close();
+	                    }
+	                    try{
+	                        dbstmt = conn.createStatement();
+	                        EhiLogger.traceBackendCmd(stmt2);
+	                        dbstmt.execute(stmt2);
+	                    }finally{
+	                        dbstmt.close();
+	                    }
+	                }catch(SQLException ex){
+	                    IOException iox=new IOException("failed to add geometry column "+geo.getName()+" to table "+tab.getName());
+	                    iox.initCause(ex);
+	                    throw iox;
+	                }
+	            }
 			}
 		}
 		geomColumns=null;
@@ -307,21 +309,23 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 			if(idxstmt!=null){
 				addCreateLine(new Stmt(idxstmt));
 				
-				if(!tableExists){
-					Statement dbstmt = null;
-					try{
-						try{
-							dbstmt = conn.createStatement();
-							EhiLogger.traceBackendCmd(idxstmt);
-							dbstmt.execute(idxstmt);
-						}finally{
-							dbstmt.close();
-						}
-					}catch(SQLException ex){
-						IOException iox=new IOException("failed to add index on column "+tab.getName()+"."+idxcol.getName());
-						iox.initCause(ex);
-						throw iox;
-					}
+				if(conn!=null) {
+	                if(!tableExists){
+	                    Statement dbstmt = null;
+	                    try{
+	                        try{
+	                            dbstmt = conn.createStatement();
+	                            EhiLogger.traceBackendCmd(idxstmt);
+	                            dbstmt.execute(idxstmt);
+	                        }finally{
+	                            dbstmt.close();
+	                        }
+	                    }catch(SQLException ex){
+	                        IOException iox=new IOException("failed to add index on column "+tab.getName()+"."+idxcol.getName());
+	                        iox.initCause(ex);
+	                        throw iox;
+	                    }
+	                }
 				}
 			}
 		}

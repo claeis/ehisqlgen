@@ -192,21 +192,23 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 			String stmt=out.toString();
 			addCreateLine(new Stmt(stmt));
 			out=null;
-			if(createdTables.contains(tab.getName())){
-				Statement dbstmt = null;
-				try{
-					try{
-						dbstmt = conn.createStatement();
-						EhiLogger.traceBackendCmd(stmt);
-						dbstmt.executeUpdate(stmt);
-					}finally{
-						dbstmt.close();
-					}
-				}catch(SQLException ex){
-					IOException iox=new IOException("failed to add UNIQUE to table "+tab.getName());
-					iox.initCause(ex);
-					throw iox;
-				}
+			if(conn!=null) {
+	            if(createdTables.contains(tab.getName())){
+	                Statement dbstmt = null;
+	                try{
+	                    try{
+	                        dbstmt = conn.createStatement();
+	                        EhiLogger.traceBackendCmd(stmt);
+	                        dbstmt.executeUpdate(stmt);
+	                    }finally{
+	                        dbstmt.close();
+	                    }
+	                }catch(SQLException ex){
+	                    IOException iox=new IOException("failed to add UNIQUE to table "+tab.getName());
+	                    iox.initCause(ex);
+	                    throw iox;
+	                }
+	            }
 			}
 		}
 	}
@@ -251,21 +253,23 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 				+")";
 			}
 			addDropLine(new Stmt(dropstmt));
-			if(!tableExists){
-				Statement dbstmt = null;
-				try{
-					try{
-						dbstmt = conn.createStatement();
-						EhiLogger.traceBackendCmd(stmt);
-						dbstmt.execute(stmt);
-					}finally{
-						dbstmt.close();
-					}
-				}catch(SQLException ex){
-					IOException iox=new IOException("failed to add geometry column "+geo.getName()+" to table "+tab.getName());
-					iox.initCause(ex);
-					throw iox;
-				}
+			if(conn!=null) {
+	            if(!tableExists){
+	                Statement dbstmt = null;
+	                try{
+	                    try{
+	                        dbstmt = conn.createStatement();
+	                        EhiLogger.traceBackendCmd(stmt);
+	                        dbstmt.execute(stmt);
+	                    }finally{
+	                        dbstmt.close();
+	                    }
+	                }catch(SQLException ex){
+	                    IOException iox=new IOException("failed to add geometry column "+geo.getName()+" to table "+tab.getName());
+	                    iox.initCause(ex);
+	                    throw iox;
+	                }
+	            }
 			}
 		}
 		geomColumns=null;

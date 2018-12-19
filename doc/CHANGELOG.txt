@@ -1,5 +1,6 @@
 LATEST SNAPSHOT
 ---------------
+- allow schema generation without open connection
 
 ehisqlgen 1.13.6 (2018-09-05)
 ---------------------------
