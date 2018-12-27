@@ -113,6 +113,8 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 			type="bytea";
 		}else if(column instanceof DbColXml){
 			type="xml";
+        }else if(column instanceof DbColJson){
+            type="jsonb";
 		}else{
 			type="text";
 		}

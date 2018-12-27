@@ -164,6 +164,9 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 			type="BLOB";
 		}else if(column instanceof DbColXml){
 			type="TEXT";
+        }else if(column instanceof DbColJson){
+            type="TEXT";
+            jsonColumns.add((DbColJson) column);
 		}else{
 			type="TEXT";
 		}
@@ -201,9 +204,11 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 	}
 	private ArrayList<DbColumn> indexColumns=null;
 	private ArrayList<DbColGeometry> geomColumns=null;
+    private ArrayList<DbColJson> jsonColumns=null;
 	public void visit1TableBegin(DbTable tab) throws IOException {
 		super.visit1TableBegin(tab);
 		geomColumns=new ArrayList<DbColGeometry>();
+        jsonColumns=new ArrayList<DbColJson>();
 		indexColumns=new ArrayList<DbColumn>();
 	}
 
@@ -296,6 +301,41 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 			}
 		}
 		geomColumns=null;
+		
+		/* And set 'application/json' in gpkg_data_columns as the 'mime_type'
+		*  The column in the table layer would then be declared as standard TEXT, so 
+		*  consumers unaware of the extension would be able to still read it correctly.
+		*/
+        for(DbColJson geo:jsonColumns){
+            String cmt=tab.getComment()==null?"null":"\'"+tab.getComment()+"\'";
+            final String jsonName="JSON";
+            String stmt2="INSERT INTO gpkg_data_columns (table_name,column_name,name,title,description,mime_type,constraint_name)" 
+            +"VALUES ('"+tab.getName().getName()+"','"+geo.getName()+"' ,'"+jsonName+"','JSON','JSON','application/json',NULL)";
+            
+            addCreateLine(new Stmt(stmt2));
+                        
+            String dropstmt2="DELETE FROM gpkg_data_columns WHERE table_name='"+tab.getName().getName()+"' AND column_name='"+geo.getName()+"'"+"' AND name='"+jsonName+"'";
+            addDropLine(new Stmt(dropstmt2));
+            if(conn!=null) {
+                if(!tableExists){
+                    Statement dbstmt = null;
+                    try{
+                        try{
+                            dbstmt = conn.createStatement();
+                            EhiLogger.traceBackendCmd(stmt2);
+                            dbstmt.execute(stmt2);
+                        }finally{
+                            dbstmt.close();
+                        }
+                    }catch(SQLException ex){
+                        IOException iox=new IOException("failed to add json column "+geo.getName()+" to table "+tab.getName());
+                        iox.initCause(ex);
+                        throw iox;
+                    }
+                }
+            }
+        }
+        jsonColumns=null;
 
 		for(DbColumn idxcol:indexColumns){
 			
