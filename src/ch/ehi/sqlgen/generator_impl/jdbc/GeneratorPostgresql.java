@@ -481,6 +481,29 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 				addConstraint(dbTab, constraintName,createstmt, dropstmt);
 				
 			}
+            if(dbCol instanceof DbColVarchar && ((DbColVarchar)dbCol).getValueRestriction()!=null){
+                DbColVarchar dbColTxt=(DbColVarchar)dbCol;
+                String createstmt=null;
+                StringBuffer action=new StringBuffer("IN (");
+                String sep="";
+                for(String restrictedValue:dbColTxt.getValueRestriction()){
+                    action.append(sep);
+                    action.append("'");
+                    action.append(escapeString(restrictedValue));
+                    action.append("'");
+                    sep=",";
+                }
+                action.append(")");
+                String constraintName=createConstraintName(dbTab,"check",dbCol.getName());
+                //  ALTER TABLE ce.classb1 ADD CONSTRAINT classb1_attr_check CHECK (attr IN ('a','b'));
+                createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" CHECK( "+dbCol.getName()+" "+action.toString()+")";
+                
+                //  ALTER TABLE ce.classb1 DROP CONSTRAINT classb1_t_id_fkey;
+                String dropstmt=null;
+                dropstmt="ALTER TABLE "+sqlTabName+" DROP CONSTRAINT "+constraintName;
+
+                addConstraint(dbTab, constraintName,createstmt, dropstmt);
+            }
 		}
 	}
 

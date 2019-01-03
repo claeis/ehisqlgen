@@ -160,6 +160,24 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 			}else{
 				type="TEXT("+Integer.toString(colsize)+")";
 			}
+			
+            if(((DbColVarchar)column).getValueRestriction()!=null){
+                DbColVarchar dbColTxt=(DbColVarchar)column;
+                String createstmt=null;
+                StringBuffer action=new StringBuffer("IN (");
+                String sep="";
+                for(String restrictedValue:dbColTxt.getValueRestriction()){
+                    action.append(sep);
+                    action.append("'");
+                    action.append(escapeString(restrictedValue));
+                    action.append("'");
+                    sep=",";
+                }
+                action.append(")");
+                String constraintName=createConstraintName(dbTab,"check",column.getName());
+                //   CONSTRAINT classb1_attr_check CHECK (attr IN ('a','b'));
+                createConstraintStmt=" CONSTRAINT "+constraintName+" CHECK( "+column.getName()+" "+action.toString()+")";
+            }
 		}else if(column instanceof DbColBlob){
 			type="BLOB";
 		}else if(column instanceof DbColXml){
