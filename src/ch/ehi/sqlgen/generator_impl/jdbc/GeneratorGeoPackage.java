@@ -48,6 +48,10 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 
 	private boolean createGeomIdx=false;
 	private String today="";
+    private ArrayList<DbColumn> indexColumns=null;
+    private ArrayList<DbColGeometry> geomColumns=null;
+    private ArrayList<DbColJson> jsonColumns=null;
+    private ArrayList<DbColumn> arrayColumns=null;
 	@Override
 	public void visitSchemaBegin(Settings config, DbSchema schema)
 			throws IOException {
@@ -97,13 +101,7 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 	@Override
 	public void visitColumn(DbTable dbTab,DbColumn column) throws IOException {
 		String type="";
-		String size="";
-		String notSupported=null;
-		boolean createColNow=true;
 		String createConstraintStmt="";
-        if(column.getArraySize()!=DbColumn.NOT_AN_ARRAY) {
-            throw new UnsupportedOperationException();
-        }
 		if(column instanceof DbColBoolean){
 			type="BOOLEAN";
 		}else if(column instanceof DbColDateTime){
@@ -130,6 +128,9 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 				createConstraintStmt=" CONSTRAINT "+constraintName+" CHECK( "+col.getName()+" "+constraintAction+")";
 			}
 		}else if(column instanceof DbColGeometry){
+	        if(column.getArraySize()!=DbColumn.NOT_AN_ARRAY) {
+	            throw new UnsupportedOperationException();
+	        }
 			geomColumns.add((DbColGeometry) column);
 			type=getGpkgGeometryTypename(((DbColGeometry) column).getType());
 		}else if(column instanceof DbColId){
@@ -163,7 +164,6 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 			
             if(((DbColVarchar)column).getValueRestriction()!=null){
                 DbColVarchar dbColTxt=(DbColVarchar)column;
-                String createstmt=null;
                 StringBuffer action=new StringBuffer("IN (");
                 String sep="";
                 for(String restrictedValue:dbColTxt.getValueRestriction()){
@@ -188,45 +188,51 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 		}else{
 			type="TEXT";
 		}
-		String isNull=column.isNotNull()?"NOT NULL":"NULL";
-		if(column.isPrimaryKey()){
-			isNull="NOT NULL PRIMARY KEY";
-		}
-		String sep=" ";
-		String defaultValue="";
-		if(column.getDefaultValue()!=null){
-			defaultValue=sep+"DEFAULT "+column.getDefaultValue();
-			sep=" ";
-		}
 		if(column.isIndex() || (createGeomIdx && column instanceof DbColGeometry)){
 			// just collect it; process it later
 			indexColumns.add(column);
 		}
-		String fkConstraint="";
-		if(column.getReferencedTable()!=null){
-			String action="";
-			if(column.getOnUpdateAction()!=null){
-				action=action+" ON UPDATE "+column.getOnUpdateAction();
-			}
-			if(column.getOnDeleteAction()!=null){
-				action=action+" ON DELETE "+column.getOnDeleteAction();
-			}
-			String constraintName=createConstraintName(dbTab,"fkey",column.getName());
-			fkConstraint=" CONSTRAINT "+constraintName+" REFERENCES "+column.getReferencedTable().getQName()+action+" DEFERRABLE INITIALLY DEFERRED";
-		}
-		if(createColNow){
-			String name=column.getName();
-			out.write(getIndent()+colSep+name+" "+type+" "+isNull+defaultValue+fkConstraint+createConstraintStmt+newline());
-			colSep=",";
-		}
+        if(column.getArraySize()!=DbColumn.NOT_AN_ARRAY && !(column instanceof DbColJson)) {
+            String isNull=column.isNotNull()?"NOT NULL":"NULL";
+            type="TEXT";
+            String name=column.getName();
+            out.write(getIndent()+colSep+name+" "+type+" "+isNull+newline());
+            colSep=",";
+            arrayColumns.add(column);
+        }else {
+            String isNull=column.isNotNull()?"NOT NULL":"NULL";
+            if(column.isPrimaryKey()){
+                isNull="NOT NULL PRIMARY KEY";
+            }
+            String sep=" ";
+            String defaultValue="";
+            if(column.getDefaultValue()!=null){
+                defaultValue=sep+"DEFAULT "+column.getDefaultValue();
+                sep=" ";
+            }
+            String fkConstraint="";
+            if(column.getReferencedTable()!=null){
+                String action="";
+                if(column.getOnUpdateAction()!=null){
+                    action=action+" ON UPDATE "+column.getOnUpdateAction();
+                }
+                if(column.getOnDeleteAction()!=null){
+                    action=action+" ON DELETE "+column.getOnDeleteAction();
+                }
+                String constraintName=createConstraintName(dbTab,"fkey",column.getName());
+                fkConstraint=" CONSTRAINT "+constraintName+" REFERENCES "+column.getReferencedTable().getQName()+action+" DEFERRABLE INITIALLY DEFERRED";
+            }
+            String name=column.getName();
+            out.write(getIndent()+colSep+name+" "+type+" "+isNull+defaultValue+fkConstraint+createConstraintStmt+newline());
+            colSep=",";
+        }
+
 	}
-	private ArrayList<DbColumn> indexColumns=null;
-	private ArrayList<DbColGeometry> geomColumns=null;
-    private ArrayList<DbColJson> jsonColumns=null;
 	public void visit1TableBegin(DbTable tab) throws IOException {
 		super.visit1TableBegin(tab);
 		geomColumns=new ArrayList<DbColGeometry>();
         jsonColumns=new ArrayList<DbColJson>();
+        arrayColumns=new ArrayList<DbColumn>();
 		indexColumns=new ArrayList<DbColumn>();
 	}
 
@@ -320,40 +326,15 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 		}
 		geomColumns=null;
 		
-		/* And set 'application/json' in gpkg_data_columns as the 'mime_type'
-		*  The column in the table layer would then be declared as standard TEXT, so 
-		*  consumers unaware of the extension would be able to still read it correctly.
-		*/
-        for(DbColJson geo:jsonColumns){
-            String cmt=tab.getComment()==null?"null":"\'"+tab.getComment()+"\'";
-            final String jsonName="JSON";
-            String stmt2="INSERT INTO gpkg_data_columns (table_name,column_name,name,title,description,mime_type,constraint_name)" 
-            +"VALUES ('"+tab.getName().getName()+"','"+geo.getName()+"' ,'"+jsonName+"','JSON','JSON','application/json',NULL)";
-            
-            addCreateLine(new Stmt(stmt2));
-                        
-            String dropstmt2="DELETE FROM gpkg_data_columns WHERE table_name='"+tab.getName().getName()+"' AND column_name='"+geo.getName()+"'"+"' AND name='"+jsonName+"'";
-            addDropLine(new Stmt(dropstmt2));
-            if(conn!=null) {
-                if(!tableExists){
-                    Statement dbstmt = null;
-                    try{
-                        try{
-                            dbstmt = conn.createStatement();
-                            EhiLogger.traceBackendCmd(stmt2);
-                            dbstmt.execute(stmt2);
-                        }finally{
-                            dbstmt.close();
-                        }
-                    }catch(SQLException ex){
-                        IOException iox=new IOException("failed to add json column "+geo.getName()+" to table "+tab.getName());
-                        iox.initCause(ex);
-                        throw iox;
-                    }
-                }
-            }
+        for(DbColJson jsonCol:jsonColumns){
+            addJsonColumn(tab, tableExists, jsonCol);
         }
         jsonColumns=null;
+        
+        for(DbColumn arrayCol:arrayColumns){
+            addJsonColumn(tab, tableExists, arrayCol);
+        }
+        arrayColumns=null;
 
 		for(DbColumn idxcol:indexColumns){
 			
@@ -390,6 +371,35 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 		indexColumns=null;
 		
 	}
+
+    protected void addJsonColumn(DbTable tab, boolean tableExists, DbColumn col)
+            throws IOException {
+        String stmt2="INSERT INTO gpkg_data_columns (table_name,column_name,name,title,description,mime_type,constraint_name)" 
+        +"VALUES ('"+tab.getName().getName()+"','"+col.getName()+"' ,NULL,NULL,NULL,'application/json',NULL)";
+        
+        addCreateLine(new Stmt(stmt2));
+                    
+        String dropstmt2="DELETE FROM gpkg_data_columns WHERE table_name='"+tab.getName().getName()+"' AND column_name='"+col.getName()+"'"+"'";
+        addDropLine(new Stmt(dropstmt2));
+        if(conn!=null) {
+            if(!tableExists){
+                Statement dbstmt = null;
+                try{
+                    try{
+                        dbstmt = conn.createStatement();
+                        EhiLogger.traceBackendCmd(stmt2);
+                        dbstmt.execute(stmt2);
+                    }finally{
+                        dbstmt.close();
+                    }
+                }catch(SQLException ex){
+                    IOException iox=new IOException("failed to add json column "+col.getName()+" to table "+tab.getName());
+                    iox.initCause(ex);
+                    throw iox;
+                }
+            }
+        }
+    }
 	@Override
 	public void visitIndex(DbIndex idx) throws IOException {
 		// don't add UNQIUE constraint via  ALTER TABLE
