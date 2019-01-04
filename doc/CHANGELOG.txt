@@ -4,6 +4,7 @@ LATEST SNAPSHOT
 - added DbColJson
 - added DbColVarchar.setValueRestriction()
 - allow to keep text representation for DbColGeometry bounding box (min,max1..3)
+- PG: use postgis geometry types instead of AddGeometryColumn
 
 ehisqlgen 1.13.6 (2018-09-05)
 ---------------------------

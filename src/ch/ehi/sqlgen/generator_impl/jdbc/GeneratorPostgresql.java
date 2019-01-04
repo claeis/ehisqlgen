@@ -63,7 +63,6 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 
 	private boolean createGeomIdx=false;
 	private ArrayList<DbColumn> indexColumns=null;
-	private ArrayList<DbColGeometry> geomColumns=null;
 	
 	@Override
 	public void visitSchemaBegin(Settings config, DbSchema schema)
@@ -92,9 +91,11 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 			DbColDecimal col=(DbColDecimal)column;
 			type="decimal("+Integer.toString(col.getSize())+","+Integer.toString(col.getPrecision())+")";
 		}else if(column instanceof DbColGeometry){
-			// just collect it; process it later
-			geomColumns.add((DbColGeometry) column);
-			createColNow=false;
+		    DbColGeometry geo=(DbColGeometry)column;
+		    if(!geo.getSrsAuth().equals("EPSG")) {
+		        throw new IllegalArgumentException("unexpected SrsAuth <"+geo.getSrsAuth()+">");
+		    }
+            type="geometry("+getPostgisType(geo.getType())+(geo.getDimension()==3?"Z":"")+","+geo.getSrsId()+")";
 		}else if(column instanceof DbColId){
 			type="bigint";
 		}else if(column instanceof DbColUuid){
@@ -150,7 +151,6 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 	@Override
 	public void visit1TableBegin(DbTable tab) throws IOException {
 		super.visit1TableBegin(tab);
-		geomColumns=new ArrayList<DbColGeometry>();
 		indexColumns=new ArrayList<DbColumn>();
 	}
 	
@@ -223,58 +223,6 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 		}
 		boolean tableExists=DbUtility.tableExists(conn,tab.getName());
 		super.visit1TableEnd(tab);
-		for(DbColGeometry geo:geomColumns){
-			String stmt=null;
-			if(tab.getName().getSchema()!=null){
-				stmt="SELECT AddGeometryColumn(\'"+tab.getName().getSchema().toLowerCase()+"\',\'"+tab.getName().getName().toLowerCase()+"\',\'"
-				+geo.getName().toLowerCase()+"\'"
-				+ ",(SELECT srid FROM SPATIAL_REF_SYS WHERE AUTH_NAME=\'"+geo.getSrsAuth()+"\' AND AUTH_SRID="+geo.getSrsId()+"),\'"
-				+getPostgisType(geo.getType())+"\',"
-				+ geo.getDimension()
-				+")";
-				
-			}else{
-				stmt="SELECT AddGeometryColumn(\'"+tab.getName().getName().toLowerCase()+"\',\'"
-				+geo.getName().toLowerCase()+"\'"
-				+ ",(SELECT srid FROM SPATIAL_REF_SYS WHERE AUTH_NAME=\'"+geo.getSrsAuth()+"\' AND AUTH_SRID="+geo.getSrsId()+"),\'"
-				+getPostgisType(geo.getType())+"\',"
-				+ geo.getDimension()
-				+")";
-				
-			}
-			addCreateLine(new Stmt(stmt));
-						
-			String dropstmt=null;
-			if(tab.getName().getSchema()!=null){
-				dropstmt="SELECT DropGeometryColumn(\'"+tab.getName().getSchema().toLowerCase()+"\',\'"+tab.getName().getName().toLowerCase()+"\',\'"
-				+geo.getName().toLowerCase()+"\'"
-				+")";
-			}else{
-				dropstmt="SELECT DropGeometryColumn(\'"+tab.getName().getName().toLowerCase()+"\',\'"
-				+geo.getName().toLowerCase()+"\'"
-				+")";
-			}
-			addDropLine(new Stmt(dropstmt));
-			if(conn!=null) {
-	            if(!tableExists){
-	                Statement dbstmt = null;
-	                try{
-	                    try{
-	                        dbstmt = conn.createStatement();
-	                        EhiLogger.traceBackendCmd(stmt);
-	                        dbstmt.execute(stmt);
-	                    }finally{
-	                        dbstmt.close();
-	                    }
-	                }catch(SQLException ex){
-	                    IOException iox=new IOException("failed to add geometry column "+geo.getName()+" to table "+tab.getName());
-	                    iox.initCause(ex);
-	                    throw iox;
-	                }
-	            }
-			}
-		}
-		geomColumns=null;
 
 		for(DbColumn idxcol:indexColumns){
 			
