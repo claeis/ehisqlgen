@@ -167,196 +167,130 @@ public class DbColGeometry extends DbColumn
     // -end- 45BE2B440026 set_body40509E2001F7 "dimension"
   }
 
-  // -beg- preserve=no 45D09B2E0239 var40509E2001F7 "min1"
-  private double min1;
-  // -end- 45D09B2E0239 var40509E2001F7 "min1"
-
-  /** get current value of min1
-   *  @see #setMin1
-   */
-  // -beg- preserve=no 45D09B2E0239 get_head40509E2001F7 "min1"
-  public  double getMin1()
-  // -end- 45D09B2E0239 get_head40509E2001F7 "min1"
-  {
-    // -beg- preserve=no 45D09B2E0239 get_body40509E2001F7 "min1"
-    return min1;
-    // -end- 45D09B2E0239 get_body40509E2001F7 "min1"
-  }
-
-  /** set current value of min1
-   *  @see #getMin1
-   */
-  // -beg- preserve=no 45D09B2E0239 set_head40509E2001F7 "min1"
-  public  void setMin1(double value1)
-  // -end- 45D09B2E0239 set_head40509E2001F7 "min1"
-  {
-    // -beg- preserve=no 45D09B2E0239 set_body40509E2001F7 "min1"
-    if(min1 != value1){
-      min1 = value1;
-      
-    }
-    // -end- 45D09B2E0239 set_body40509E2001F7 "min1"
-  }
-
-  // -beg- preserve=no 45D09B350211 var40509E2001F7 "max1"
-  private double max1;
-  // -end- 45D09B350211 var40509E2001F7 "max1"
-
-  /** get current value of max1
-   *  @see #setMax1
-   */
-  // -beg- preserve=no 45D09B350211 get_head40509E2001F7 "max1"
-  public  double getMax1()
-  // -end- 45D09B350211 get_head40509E2001F7 "max1"
-  {
-    // -beg- preserve=no 45D09B350211 get_body40509E2001F7 "max1"
-    return max1;
-    // -end- 45D09B350211 get_body40509E2001F7 "max1"
-  }
-
-  /** set current value of max1
-   *  @see #getMax1
-   */
-  // -beg- preserve=no 45D09B350211 set_head40509E2001F7 "max1"
-  public  void setMax1(double value1)
-  // -end- 45D09B350211 set_head40509E2001F7 "max1"
-  {
-    // -beg- preserve=no 45D09B350211 set_body40509E2001F7 "max1"
-    if(max1 != value1){
-      max1 = value1;
-      
-    }
-    // -end- 45D09B350211 set_body40509E2001F7 "max1"
-  }
-
-  // -beg- preserve=no 45D09B3A0268 var40509E2001F7 "min2"
-  private double min2;
-  // -end- 45D09B3A0268 var40509E2001F7 "min2"
-
-  /** get current value of min2
-   *  @see #setMin2
-   */
-  // -beg- preserve=no 45D09B3A0268 get_head40509E2001F7 "min2"
-  public  double getMin2()
-  // -end- 45D09B3A0268 get_head40509E2001F7 "min2"
-  {
-    // -beg- preserve=no 45D09B3A0268 get_body40509E2001F7 "min2"
-    return min2;
-    // -end- 45D09B3A0268 get_body40509E2001F7 "min2"
-  }
-
-  /** set current value of min2
-   *  @see #getMin2
-   */
-  // -beg- preserve=no 45D09B3A0268 set_head40509E2001F7 "min2"
-  public  void setMin2(double value1)
-  // -end- 45D09B3A0268 set_head40509E2001F7 "min2"
-  {
-    // -beg- preserve=no 45D09B3A0268 set_body40509E2001F7 "min2"
-    if(min2 != value1){
-      min2 = value1;
-      
-    }
-    // -end- 45D09B3A0268 set_body40509E2001F7 "min2"
-  }
-
-  // -beg- preserve=no 45D09B3E008D var40509E2001F7 "max2"
-  private double max2;
-  // -end- 45D09B3E008D var40509E2001F7 "max2"
-
-  /** get current value of max2
-   *  @see #setMax2
-   */
-  // -beg- preserve=no 45D09B3E008D get_head40509E2001F7 "max2"
-  public  double getMax2()
-  // -end- 45D09B3E008D get_head40509E2001F7 "max2"
-  {
-    // -beg- preserve=no 45D09B3E008D get_body40509E2001F7 "max2"
-    return max2;
-    // -end- 45D09B3E008D get_body40509E2001F7 "max2"
-  }
-
-  /** set current value of max2
-   *  @see #getMax2
-   */
-  // -beg- preserve=no 45D09B3E008D set_head40509E2001F7 "max2"
-  public  void setMax2(double value1)
-  // -end- 45D09B3E008D set_head40509E2001F7 "max2"
-  {
-    // -beg- preserve=no 45D09B3E008D set_body40509E2001F7 "max2"
-    if(max2 != value1){
-      max2 = value1;
-      
-    }
-    // -end- 45D09B3E008D set_body40509E2001F7 "max2"
-  }
-
-  // -beg- preserve=no 45D09B430301 var40509E2001F7 "min3"
-  private double min3;
-  // -end- 45D09B430301 var40509E2001F7 "min3"
-
-  /** get current value of min3
-   *  @see #setMin3
-   */
-  // -beg- preserve=no 45D09B430301 get_head40509E2001F7 "min3"
-  public  double getMin3()
-  // -end- 45D09B430301 get_head40509E2001F7 "min3"
-  {
-    // -beg- preserve=no 45D09B430301 get_body40509E2001F7 "min3"
-    return min3;
-    // -end- 45D09B430301 get_body40509E2001F7 "min3"
-  }
-
-  /** set current value of min3
-   *  @see #getMin3
-   */
-  // -beg- preserve=no 45D09B430301 set_head40509E2001F7 "min3"
-  public  void setMin3(double value1)
-  // -end- 45D09B430301 set_head40509E2001F7 "min3"
-  {
-    // -beg- preserve=no 45D09B430301 set_body40509E2001F7 "min3"
-    if(min3 != value1){
-      min3 = value1;
-      
-    }
-    // -end- 45D09B430301 set_body40509E2001F7 "min3"
-  }
-
-  // -beg- preserve=no 45D09B48029A var40509E2001F7 "max3"
-  private double max3;
-  // -end- 45D09B48029A var40509E2001F7 "max3"
-
-  /** get current value of max3
-   *  @see #setMax3
-   */
-  // -beg- preserve=no 45D09B48029A get_head40509E2001F7 "max3"
-  public  double getMax3()
-  // -end- 45D09B48029A get_head40509E2001F7 "max3"
-  {
-    // -beg- preserve=no 45D09B48029A get_body40509E2001F7 "max3"
-    return max3;
-    // -end- 45D09B48029A get_body40509E2001F7 "max3"
-  }
-
-  /** set current value of max3
-   *  @see #getMax3
-   */
-  // -beg- preserve=no 45D09B48029A set_head40509E2001F7 "max3"
-  public  void setMax3(double value1)
-  // -end- 45D09B48029A set_head40509E2001F7 "max3"
-  {
-    // -beg- preserve=no 45D09B48029A set_body40509E2001F7 "max3"
-    if(max3 != value1){
-      max3 = value1;
-      
-    }
-    // -end- 45D09B48029A set_body40509E2001F7 "max3"
-  }
 
   // declare/define something only in the code
   // please fill in/modify the following section
-  // -beg- preserve=no 40509E2001F7 detail_end "DbColGeometry"
+  // -beg- preserve=yes 40509E2001F7 detail_end "DbColGeometry"
+  private String max1;
+  private String max2;
+  private String max3;
+  private String min1;
+  private String min2;
+  private String min3;
 
+public String getMax1AsString() {
+    return max1;
+}
+
+public void setMax1(String max1) {
+    if(max1!=null) {
+        Double.valueOf(max1);
+    }
+    this.max1 = max1;
+}
+
+public String getMax2AsString() {
+    return max2;
+}
+
+public void setMax2(String max2) {
+    if(max2!=null) {
+        Double.valueOf(max2);
+    }
+    this.max2 = max2;
+}
+
+public String getMax3AsString() {
+    return max3;
+}
+
+public void setMax3(String max3) {
+    if(max3!=null) {
+        Double.valueOf(max3);
+    }
+    this.max3 = max3;
+}
+
+public String getMin1AsString() {
+    return min1;
+}
+
+public void setMin1(String min1) {
+    if(min1!=null) {
+        Double.valueOf(min1);
+    }
+    this.min1 = min1;
+}
+
+public String getMin2AsString() {
+    return min2;
+}
+
+public void setMin2(String min2) {
+    if(min2!=null) {
+        Double.valueOf(min2);
+    }
+    this.min2 = min2;
+}
+
+public String getMin3AsString() {
+    return min3;
+}
+
+public void setMin3(String min3) {
+    if(min3!=null) {
+        Double.valueOf(min3);
+    }
+    this.min3 = min3;
+}
+public double getMax1() {
+    return Double.valueOf(max1);
+}
+
+public void setMax1(double max1) {
+    this.max1 = Double.toString(max1);
+}
+public double getMax2() {
+    return Double.valueOf(max2);
+}
+
+public void setMax2(double max2) {
+    this.max2 = Double.toString(max2);
+}
+
+public double getMax3() {
+    return Double.valueOf(max3);
+}
+
+public void setMax3(double max3) {
+    this.max3 = Double.toString(max3);
+}
+
+public double getMin1() {
+    return Double.valueOf(min1);
+}
+
+public void setMin1(double min1) {
+    this.min1 = Double.toString(min1);
+}
+
+public double getMin2() {
+    return Double.valueOf(min2);
+}
+
+public void setMin2(double min2) {
+    this.min2 = Double.toString(min2);
+}
+
+public double getMin3() {
+    return Double.valueOf(min3);
+}
+
+public void setMin3(double min3) {
+    this.min3 = Double.toString(min3);
+}
+
+  
   // -end- 40509E2001F7 detail_end "DbColGeometry"
 
 }
