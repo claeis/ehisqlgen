@@ -235,22 +235,24 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 			}
 			addCreateLine(new Stmt(idxstmt));
 			
-			if(!tableExists){
-				Statement dbstmt = null;
-				try{
-					try{
-						dbstmt = conn.createStatement();
-						EhiLogger.traceBackendCmd(idxstmt);
-						dbstmt.execute(idxstmt);
-					}finally{
-						dbstmt.close();
-					}
-				}catch(SQLException ex){
-					IOException iox=new IOException("failed to add index on column "+tab.getName()+"."+idxcol.getName());
-					iox.initCause(ex);
-					throw iox;
-				}
-			}
+            if(conn!=null) {
+                if(!tableExists){
+                    Statement dbstmt = null;
+                    try{
+                        try{
+                            dbstmt = conn.createStatement();
+                            EhiLogger.traceBackendCmd(idxstmt);
+                            dbstmt.execute(idxstmt);
+                        }finally{
+                            dbstmt.close();
+                        }
+                    }catch(SQLException ex){
+                        IOException iox=new IOException("failed to add index on column "+tab.getName()+"."+idxcol.getName());
+                        iox.initCause(ex);
+                        throw iox;
+                    }
+                }
+            }
 		}
 		indexColumns=null;
 		
@@ -258,22 +260,24 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 		if(cmt!=null){
 			cmt="COMMENT ON TABLE "+sqlTabName+" IS '"+escapeString(cmt)+"'";
 			addCreateLine(new Stmt(cmt));
-			if(!tableExists){
-				Statement dbstmt = null;
-				try{
-					try{
-						dbstmt = conn.createStatement();
-						EhiLogger.traceBackendCmd(cmt);
-						dbstmt.execute(cmt);
-					}finally{
-						dbstmt.close();
-					}
-				}catch(SQLException ex){
-					IOException iox=new IOException("failed to add comment to table "+tab.getName());
-					iox.initCause(ex);
-					throw iox;
-				}
-			}
+            if(conn!=null) {
+                if(!tableExists){
+                    Statement dbstmt = null;
+                    try{
+                        try{
+                            dbstmt = conn.createStatement();
+                            EhiLogger.traceBackendCmd(cmt);
+                            dbstmt.execute(cmt);
+                        }finally{
+                            dbstmt.close();
+                        }
+                    }catch(SQLException ex){
+                        IOException iox=new IOException("failed to add comment to table "+tab.getName());
+                        iox.initCause(ex);
+                        throw iox;
+                    }
+                }
+            }
 		}
 		
 		java.util.Iterator coli=tab.iteratorColumn();
@@ -283,22 +287,24 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 			if(cmt!=null){
 				cmt="COMMENT ON COLUMN "+sqlTabName+"."+col.getName()+" IS '"+escapeString(cmt)+"'";
 				addCreateLine(new Stmt(cmt));
-				if(!tableExists){
-					Statement dbstmt = null;
-					try{
-						try{
-							dbstmt = conn.createStatement();
-							EhiLogger.traceBackendCmd(cmt);
-							dbstmt.execute(cmt);
-						}finally{
-							dbstmt.close();
-						}
-					}catch(SQLException ex){
-						IOException iox=new IOException("failed to add comment to table "+tab.getName());
-						iox.initCause(ex);
-						throw iox;
-					}
-				}
+	            if(conn!=null) {
+	                if(!tableExists){
+	                    Statement dbstmt = null;
+	                    try{
+	                        try{
+	                            dbstmt = conn.createStatement();
+	                            EhiLogger.traceBackendCmd(cmt);
+	                            dbstmt.execute(cmt);
+	                        }finally{
+	                            dbstmt.close();
+	                        }
+	                    }catch(SQLException ex){
+	                        IOException iox=new IOException("failed to add comment to table "+tab.getName());
+	                        iox.initCause(ex);
+	                        throw iox;
+	                    }
+	                }
+	            }
 			}
 		}
 		
