@@ -369,94 +369,99 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 		for(Iterator dbColi=dbTab.iteratorColumn();dbColi.hasNext();){
 			DbColumn dbCol=(DbColumn) dbColi.next();
 			if(dbCol.getReferencedTable()!=null){
-				String createstmt=null;
-				String action="";
-				if(dbCol.getOnUpdateAction()!=null){
-					action=action+" ON UPDATE "+dbCol.getOnUpdateAction();
-				}
-				if(dbCol.getOnDeleteAction()!=null){
-					action=action+" ON DELETE "+dbCol.getOnDeleteAction();
-				}
-				String constraintName=createConstraintName(dbTab,"fkey",dbCol.getName());
-				//  ALTER TABLE ce.classb1 ADD CONSTRAINT classb1_t_id_fkey FOREIGN KEY ( t_id ) REFERENCES ce.classa1;
-				createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" FOREIGN KEY ( "+dbCol.getName()+" ) REFERENCES "+dbCol.getReferencedTable().getQName()+action+" DEFERRABLE INITIALLY DEFERRED";
-				
-				//  ALTER TABLE ce.classb1 DROP CONSTRAINT classb1_t_id_fkey;
-				String dropstmt=null;
-				dropstmt="ALTER TABLE "+sqlTabName+" DROP CONSTRAINT "+constraintName;
+	            if(dbCol.getArraySize()==DbColumn.NOT_AN_ARRAY) {
+	                String createstmt=null;
+	                String action="";
+	                if(dbCol.getOnUpdateAction()!=null){
+	                    action=action+" ON UPDATE "+dbCol.getOnUpdateAction();
+	                }
+	                if(dbCol.getOnDeleteAction()!=null){
+	                    action=action+" ON DELETE "+dbCol.getOnDeleteAction();
+	                }
+	                String constraintName=createConstraintName(dbTab,"fkey",dbCol.getName());
+	                //  ALTER TABLE ce.classb1 ADD CONSTRAINT classb1_t_id_fkey FOREIGN KEY ( t_id ) REFERENCES ce.classa1;
+	                createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" FOREIGN KEY ( "+dbCol.getName()+" ) REFERENCES "+dbCol.getReferencedTable().getQName()+action+" DEFERRABLE INITIALLY DEFERRED";
+	                
+	                //  ALTER TABLE ce.classb1 DROP CONSTRAINT classb1_t_id_fkey;
+	                String dropstmt=null;
+	                dropstmt="ALTER TABLE "+sqlTabName+" DROP CONSTRAINT "+constraintName;
 
-				addConstraint(dbTab, constraintName,createstmt, dropstmt);
-				
+	                addConstraint(dbTab, constraintName,createstmt, dropstmt);
+	            }
 			}
 			if(dbCol instanceof DbColNumber && (((DbColNumber)dbCol).getMinValue()!=null || ((DbColNumber)dbCol).getMaxValue()!=null)){
-				DbColNumber dbColNum=(DbColNumber)dbCol;
-				String createstmt=null;
-				String action="";
-				if(dbColNum.getMinValue()!=null || dbColNum.getMaxValue()!=null){
-					if(dbColNum.getMaxValue()==null){
-						action=">="+dbColNum.getMinValue();
-					}else if(dbColNum.getMinValue()==null){
-						action="<="+dbColNum.getMaxValue();
-					}else{
-						action="BETWEEN "+dbColNum.getMinValue()+" AND "+dbColNum.getMaxValue();
-					}
-				}
-				String constraintName=createConstraintName(dbTab,"check",dbCol.getName());
-				//  ALTER TABLE ce.classb1 ADD CONSTRAINT classb1_attr_check CHECK (attr BETWEEN 0 AND 50);
-				createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" CHECK( "+dbCol.getName()+" "+action+")";
-				
-				//  ALTER TABLE ce.classb1 DROP CONSTRAINT classb1_t_id_fkey;
-				String dropstmt=null;
-				dropstmt="ALTER TABLE "+sqlTabName+" DROP CONSTRAINT "+constraintName;
+	            if(dbCol.getArraySize()==DbColumn.NOT_AN_ARRAY) {
+	                DbColNumber dbColNum=(DbColNumber)dbCol;
+	                String createstmt=null;
+	                String action="";
+	                if(dbColNum.getMinValue()!=null || dbColNum.getMaxValue()!=null){
+	                    if(dbColNum.getMaxValue()==null){
+	                        action=">="+dbColNum.getMinValue();
+	                    }else if(dbColNum.getMinValue()==null){
+	                        action="<="+dbColNum.getMaxValue();
+	                    }else{
+	                        action="BETWEEN "+dbColNum.getMinValue()+" AND "+dbColNum.getMaxValue();
+	                    }
+	                }
+	                String constraintName=createConstraintName(dbTab,"check",dbCol.getName());
+	                //  ALTER TABLE ce.classb1 ADD CONSTRAINT classb1_attr_check CHECK (attr BETWEEN 0 AND 50);
+	                createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" CHECK( "+dbCol.getName()+" "+action+")";
+	                
+	                //  ALTER TABLE ce.classb1 DROP CONSTRAINT classb1_t_id_fkey;
+	                String dropstmt=null;
+	                dropstmt="ALTER TABLE "+sqlTabName+" DROP CONSTRAINT "+constraintName;
 
-				addConstraint(dbTab, constraintName,createstmt, dropstmt);
-				
+	                addConstraint(dbTab, constraintName,createstmt, dropstmt);
+	            }
 			}else if(dbCol instanceof DbColDecimal && (((DbColDecimal)dbCol).getMinValue()!=null || ((DbColDecimal)dbCol).getMaxValue()!=null)){
-				DbColDecimal dbColNum=(DbColDecimal)dbCol;
-				String createstmt=null;
-				String action="";
-				if(dbColNum.getMinValue()!=null || dbColNum.getMaxValue()!=null){
-					if(dbColNum.getMaxValue()==null){
-						action=">="+dbColNum.getMinValue();
-					}else if(dbColNum.getMinValue()==null){
-						action="<="+dbColNum.getMaxValue();
-					}else{
-						action="BETWEEN "+dbColNum.getMinValue()+" AND "+dbColNum.getMaxValue();
-					}
-				}
-				String constraintName=createConstraintName(dbTab,"check",dbCol.getName());
-				//  ALTER TABLE ce.classb1 ADD CONSTRAINT classb1_attr_check CHECK (attr BETWEEN 0 AND 50);
-				createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" CHECK( "+dbCol.getName()+" "+action+")";
-				
-				//  ALTER TABLE ce.classb1 DROP CONSTRAINT classb1_t_id_fkey;
-				String dropstmt=null;
-				dropstmt="ALTER TABLE "+sqlTabName+" DROP CONSTRAINT "+constraintName;
+	            if(dbCol.getArraySize()==DbColumn.NOT_AN_ARRAY) {
+	                DbColDecimal dbColNum=(DbColDecimal)dbCol;
+	                String createstmt=null;
+	                String action="";
+	                if(dbColNum.getMinValue()!=null || dbColNum.getMaxValue()!=null){
+	                    if(dbColNum.getMaxValue()==null){
+	                        action=">="+dbColNum.getMinValue();
+	                    }else if(dbColNum.getMinValue()==null){
+	                        action="<="+dbColNum.getMaxValue();
+	                    }else{
+	                        action="BETWEEN "+dbColNum.getMinValue()+" AND "+dbColNum.getMaxValue();
+	                    }
+	                }
+	                String constraintName=createConstraintName(dbTab,"check",dbCol.getName());
+	                //  ALTER TABLE ce.classb1 ADD CONSTRAINT classb1_attr_check CHECK (attr BETWEEN 0 AND 50);
+	                createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" CHECK( "+dbCol.getName()+" "+action+")";
+	                
+	                //  ALTER TABLE ce.classb1 DROP CONSTRAINT classb1_t_id_fkey;
+	                String dropstmt=null;
+	                dropstmt="ALTER TABLE "+sqlTabName+" DROP CONSTRAINT "+constraintName;
 
-				addConstraint(dbTab, constraintName,createstmt, dropstmt);
-				
+	                addConstraint(dbTab, constraintName,createstmt, dropstmt);
+	            }
 			}
             if(dbCol instanceof DbColVarchar && ((DbColVarchar)dbCol).getValueRestriction()!=null){
-                DbColVarchar dbColTxt=(DbColVarchar)dbCol;
-                String createstmt=null;
-                StringBuffer action=new StringBuffer("IN (");
-                String sep="";
-                for(String restrictedValue:dbColTxt.getValueRestriction()){
-                    action.append(sep);
-                    action.append("'");
-                    action.append(escapeString(restrictedValue));
-                    action.append("'");
-                    sep=",";
-                }
-                action.append(")");
-                String constraintName=createConstraintName(dbTab,"check",dbCol.getName());
-                //  ALTER TABLE ce.classb1 ADD CONSTRAINT classb1_attr_check CHECK (attr IN ('a','b'));
-                createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" CHECK( "+dbCol.getName()+" "+action.toString()+")";
-                
-                //  ALTER TABLE ce.classb1 DROP CONSTRAINT classb1_t_id_fkey;
-                String dropstmt=null;
-                dropstmt="ALTER TABLE "+sqlTabName+" DROP CONSTRAINT "+constraintName;
+                if(dbCol.getArraySize()==DbColumn.NOT_AN_ARRAY) {
+                    DbColVarchar dbColTxt=(DbColVarchar)dbCol;
+                    String createstmt=null;
+                    StringBuffer action=new StringBuffer("IN (");
+                    String sep="";
+                    for(String restrictedValue:dbColTxt.getValueRestriction()){
+                        action.append(sep);
+                        action.append("'");
+                        action.append(escapeString(restrictedValue));
+                        action.append("'");
+                        sep=",";
+                    }
+                    action.append(")");
+                    String constraintName=createConstraintName(dbTab,"check",dbCol.getName());
+                    //  ALTER TABLE ce.classb1 ADD CONSTRAINT classb1_attr_check CHECK (attr IN ('a','b'));
+                    createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" CHECK( "+dbCol.getName()+" "+action.toString()+")";
+                    
+                    //  ALTER TABLE ce.classb1 DROP CONSTRAINT classb1_t_id_fkey;
+                    String dropstmt=null;
+                    dropstmt="ALTER TABLE "+sqlTabName+" DROP CONSTRAINT "+constraintName;
 
-                addConstraint(dbTab, constraintName,createstmt, dropstmt);
+                    addConstraint(dbTab, constraintName,createstmt, dropstmt);
+                }
             }
 		}
 	}
