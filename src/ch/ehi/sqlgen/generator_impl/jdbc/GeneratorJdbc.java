@@ -141,7 +141,12 @@ public class GeneratorJdbc implements Generator {
 			}
 		}
 		dec_ind();
-		out.write(getIndent()+")"+newline());
+        String cmt=getTableEndOptions(tab);
+        if(cmt!=null) {
+            out.write(getIndent()+") "+cmt+newline());
+        }else {
+            out.write(getIndent()+")"+newline());
+        }
 		// execute stmt
 		String stmt=out.toString();
 		addCreateLine(new Stmt(stmt));
@@ -187,7 +192,10 @@ public class GeneratorJdbc implements Generator {
 		
 	}
 
-	@Override
+	protected String getTableEndOptions(DbTable dbTab) {
+        return null;
+    }
+    @Override
 	public void visit2TableBegin(DbTable arg0) throws IOException {
 	}
 	@Override
