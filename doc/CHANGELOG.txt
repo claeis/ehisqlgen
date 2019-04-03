@@ -1,5 +1,8 @@
 LATEST SNAPSHOT
 ---------------
+
+ehisqlgen 1.13.7 (2019-04-03)
+-----------------------------
 - allow schema generation without open connection
 - added DbColJson
 - added DbColVarchar.setValueRestriction()
