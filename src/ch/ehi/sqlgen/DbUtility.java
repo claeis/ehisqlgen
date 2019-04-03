@@ -37,6 +37,9 @@ public class DbUtility {
 	public static boolean tableExists(Connection conn,DbTableName tableName)
 	{
 		try{
+		    if(conn==null) {
+		        return false;
+		    }
 			java.sql.DatabaseMetaData meta=conn.getMetaData();
 			if(meta.getURL().startsWith("jdbc:postgresql:")){
 				return pgTableExists(conn,tableName);

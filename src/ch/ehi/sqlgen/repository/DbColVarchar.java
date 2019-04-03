@@ -77,7 +77,15 @@ public class DbColVarchar extends DbColumn
 
   // declare/define something only in the code
   // please fill in/modify the following section
-  // -beg- preserve=no 4050659101ED detail_end "DbColVarchar"
+  // -beg- preserve=yes 4050659101ED detail_end "DbColVarchar"
+  private String restrictedValues[]=null;
+  public String[] getValueRestriction() {
+      return restrictedValues;
+  }
+
+  public void setValueRestriction(String restrictedValues[]) {
+      this.restrictedValues = restrictedValues;
+  }
 
   // -end- 4050659101ED detail_end "DbColVarchar"
 

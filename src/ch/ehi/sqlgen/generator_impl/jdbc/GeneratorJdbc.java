@@ -78,9 +78,6 @@ public class GeneratorJdbc implements Generator {
 	public void visitSchemaBegin(ch.ehi.basics.settings.Settings config, DbSchema schema)
 		throws IOException {
 		conn=(Connection)config.getTransientObject(SqlConfiguration.JDBC_CONNECTION);
-		if(conn==null){
-			throw new IllegalArgumentException("config.getConnection()==null");
-		}
 		if(config.getValue(MAX_SQLNAME_LENGTH)!=null){
 			_maxSqlNameLength=Integer.parseInt(config.getValue(MAX_SQLNAME_LENGTH));
 		}
@@ -144,51 +141,61 @@ public class GeneratorJdbc implements Generator {
 			}
 		}
 		dec_ind();
-		out.write(getIndent()+")"+newline());
+        String cmt=getTableEndOptions(tab);
+        if(cmt!=null) {
+            out.write(getIndent()+") "+cmt+newline());
+        }else {
+            out.write(getIndent()+")"+newline());
+        }
 		// execute stmt
 		String stmt=out.toString();
 		addCreateLine(new Stmt(stmt));
 		addDropLine(new Stmt("DROP TABLE "+tab.getName()));
 		out=null;
-		if(DbUtility.tableExists(conn,tab.getName())){
-			if(tab.isDeleteDataIfTableExists()){
-				Statement dbstmt = null;
-				try{
-					try{
-						dbstmt = conn.createStatement();
-						String delStmt="DELETE FROM "+tab.getName();
-						EhiLogger.traceBackendCmd(delStmt);
-						dbstmt.executeUpdate(delStmt);
-					}finally{
-						dbstmt.close();
-					}
-				}catch(SQLException ex){
-					IOException iox=new IOException("failed to delete data from table "+tab.getName());
-					iox.initCause(ex);
-					throw iox;
-				}
-			}
-		}else{
-			Statement dbstmt = null;
-			try{
-				try{
-					dbstmt = conn.createStatement();
-					EhiLogger.traceBackendCmd(stmt);
-					dbstmt.executeUpdate(stmt);
-					createdTables.add(tab.getName());
-				}finally{
-					dbstmt.close();
-				}
-			}catch(SQLException ex){
-				IOException iox=new IOException("failed to create table "+tab.getName());
-				iox.initCause(ex);
-				throw iox;
-			}
+		if(conn!=null) {
+	        if(DbUtility.tableExists(conn,tab.getName())){
+	            if(tab.isDeleteDataIfTableExists()){
+	                Statement dbstmt = null;
+	                try{
+	                    try{
+	                        dbstmt = conn.createStatement();
+	                        String delStmt="DELETE FROM "+tab.getName();
+	                        EhiLogger.traceBackendCmd(delStmt);
+	                        dbstmt.executeUpdate(delStmt);
+	                    }finally{
+	                        dbstmt.close();
+	                    }
+	                }catch(SQLException ex){
+	                    IOException iox=new IOException("failed to delete data from table "+tab.getName());
+	                    iox.initCause(ex);
+	                    throw iox;
+	                }
+	            }
+	        }else{
+	            Statement dbstmt = null;
+	            try{
+	                try{
+	                    dbstmt = conn.createStatement();
+	                    EhiLogger.traceBackendCmd(stmt);
+	                    dbstmt.executeUpdate(stmt);
+	                    createdTables.add(tab.getName());
+	                }finally{
+	                    dbstmt.close();
+	                }
+	            }catch(SQLException ex){
+	                IOException iox=new IOException("failed to create table "+tab.getName());
+	                iox.initCause(ex);
+	                throw iox;
+	            }
+	        }
 		}
 		
 	}
 
-	@Override
+	protected String getTableEndOptions(DbTable dbTab) {
+        return null;
+    }
+    @Override
 	public void visit2TableBegin(DbTable arg0) throws IOException {
 	}
 	@Override
@@ -263,21 +270,23 @@ public class GeneratorJdbc implements Generator {
 			String stmt=out.toString();
 			addCreateLine(new Stmt(stmt));
 			out=null;
-			if(createdTables.contains(tab.getName())){
-				Statement dbstmt = null;
-				try{
-					try{
-						dbstmt = conn.createStatement();
-						EhiLogger.traceBackendCmd(stmt);
-						dbstmt.executeUpdate(stmt);
-					}finally{
-						dbstmt.close();
-					}
-				}catch(SQLException ex){
-					IOException iox=new IOException("failed to add UNIQUE to table "+tab.getName());
-					iox.initCause(ex);
-					throw iox;
-				}
+			if(conn!=null) {
+	            if(createdTables.contains(tab.getName())){
+	                Statement dbstmt = null;
+	                try{
+	                    try{
+	                        dbstmt = conn.createStatement();
+	                        EhiLogger.traceBackendCmd(stmt);
+	                        dbstmt.executeUpdate(stmt);
+	                    }finally{
+	                        dbstmt.close();
+	                    }
+	                }catch(SQLException ex){
+	                    IOException iox=new IOException("failed to add UNIQUE to table "+tab.getName());
+	                    iox.initCause(ex);
+	                    throw iox;
+	                }
+	            }
 			}
 		}
 	}
@@ -340,7 +349,7 @@ public class GeneratorJdbc implements Generator {
 	public boolean tableExists(DbTableName tableName)
 	throws IOException
 	{
-		return DbUtility.tableExists(conn, tableName);
+		return conn!=null && DbUtility.tableExists(conn, tableName);
 	}
 	/** tests if a table with the given name was created in phase1
 	 */
@@ -375,7 +384,7 @@ public class GeneratorJdbc implements Generator {
 		addCreateLine(new Stmt(createstmt));
 		addDropLine(new Stmt(dropstmt));
 		
-		if(tableCreated(dbTab.getName())){
+		if(conn!=null && tableCreated(dbTab.getName())){
 			Statement dbstmt = null;
 			try{
 				try{
