@@ -68,7 +68,7 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 				DbColumn dbCol=dbColi.next();
 				if(dbCol.getReferencedTable()!=null){
 					DbTable refTable=schema.findTable(dbCol.getReferencedTable());
-					if(refTable!=null){
+					if(refTable!=null && refTable != table) {
 						topoSort.addcond(refTable, table);
 					}
 				}
