@@ -421,18 +421,20 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
     @Override
     public void visit1End() throws IOException {
         String stmt=totalScript.toString();
-        try{
-            Statement dbstmt = conn.createStatement();
+        if(conn!=null) {
             try{
-                dbstmt = conn.createStatement();
-                dbstmt.executeUpdate(stmt);
-            }finally{
-                dbstmt.close();
+                Statement dbstmt = conn.createStatement();
+                try{
+                    dbstmt = conn.createStatement();
+                    dbstmt.executeUpdate(stmt);
+                }finally{
+                    dbstmt.close();
+                }
+            }catch(SQLException ex){
+                IOException iox=new IOException("failed schema import: "+ ex.getMessage());
+                iox.initCause(ex);
+                throw iox;
             }
-        }catch(SQLException ex){
-            IOException iox=new IOException("failed schema import: "+ ex.getMessage());
-            iox.initCause(ex);
-            throw iox;
         }
     }
 }
