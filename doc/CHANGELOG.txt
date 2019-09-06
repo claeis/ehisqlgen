@@ -1,6 +1,10 @@
 LATEST SNAPSHOT
 ---------------
 
+ehisqlgen 1.13.8 (2019-09-06)
+-----------------------------
+- GPKG: enable FK loops between tables
+
 ehisqlgen 1.13.7 (2019-04-03)
 -----------------------------
 - allow schema generation without open connection
