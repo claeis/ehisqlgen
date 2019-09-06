@@ -52,6 +52,7 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
     private ArrayList<DbColGeometry> geomColumns=null;
     private ArrayList<DbColJson> jsonColumns=null;
     private ArrayList<DbColumn> arrayColumns=null;
+    private java.io.StringWriter totalScript=null;
 	@Override
 	public void visitSchemaBegin(Settings config, DbSchema schema)
 			throws IOException {
@@ -60,42 +61,7 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 		if("True".equals(config.getValue(SqlConfiguration.CREATE_GEOM_INDEX))){
 			createGeomIdx=true;
 		}
-		// sort tables 
-		TopoSort topoSort=new TopoSort();
-		for(DbTable table:schema.getTables()){
-			topoSort.add(table);
-			for(Iterator<DbColumn> dbColi=table.iteratorColumn();dbColi.hasNext();){
-				DbColumn dbCol=dbColi.next();
-				if(dbCol.getReferencedTable()!=null){
-					DbTable refTable=schema.findTable(dbCol.getReferencedTable());
-					if(refTable!=null){
-						topoSort.addcond(refTable, table);
-					}
-				}
-			}
-		}
-		if(!topoSort.sort()) {
-		      StringBuffer loopele=new StringBuffer();
-		      Iterator resi=topoSort.getResult().iterator();
-		      ArrayList<String> names=new ArrayList<String>();
-              while(resi.hasNext()){
-                  DbTable res=(DbTable)resi.next();
-                names.add(res.getName().getName());
-              }
-              if(names.size()>1) {
-                  names.remove(0);
-                  Collections.rotate(names,names.indexOf(Collections.min(names)));
-              }
-              names.add(names.get(0));
-		      String sep="";
-		      for(String name:names){
-		        loopele.append(sep);
-		        loopele.append(name);
-		        sep="->";
-		      }
-		      throw new IOException("loop in create table statements: "+loopele.toString());
-		}
-		schema.setTables(topoSort.getResult());
+        totalScript=new java.io.StringWriter();
 	}
 
 	@Override
@@ -266,6 +232,51 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 			}
 		}
 	}
+    public void finishTable(DbTable tab) throws IOException {
+        // this method is a clone of the parent visit1TableEnd
+        // that does not execute the create script
+        // write primary key
+        for(Iterator idxi=tab.iteratorIndex();idxi.hasNext();){
+            DbIndex idx=(DbIndex)idxi.next();
+            if(idx.isPrimary()){
+                out.write(getIndent()+colSep+"PRIMARY KEY (");
+                String sep="";
+                for(Iterator attri=idx.iteratorAttr();attri.hasNext();){
+                    DbColumn attr=(DbColumn)attri.next();
+                    out.write(sep+attr.getName());
+                    sep=",";
+                }
+                out.write(")"+newline());
+                colSep=",";
+            }
+        }
+        dec_ind();
+        String cmt=getTableEndOptions(tab);
+        if(cmt!=null) {
+            out.write(getIndent()+") "+cmt+newline());
+        }else {
+            out.write(getIndent()+")"+newline());
+        }
+        // add stmt to totalScript
+        String stmt=out.toString();
+        addCreateLine(new Stmt(stmt));
+        addDropLine(new Stmt("DROP TABLE "+tab.getName()));
+        out=null;
+        if(conn!=null) {
+            if(DbUtility.tableExists(conn,tab.getName())){
+                if(tab.isDeleteDataIfTableExists()){
+                    String delStmt="DELETE FROM "+tab.getName();
+                    EhiLogger.traceBackendCmd(delStmt);
+                    totalScript.write(delStmt+";"+newline());
+                }
+            }else{
+                Statement dbstmt = null;
+                EhiLogger.traceBackendCmd(stmt);
+                createdTables.add(tab.getName());
+                totalScript.write(stmt+";"+newline());
+            }
+        }
+    }
 	@Override
 	public void visit1TableEnd(DbTable tab) throws IOException {
 		String sqlTabName=tab.getName().getName();
@@ -273,7 +284,7 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 			sqlTabName=tab.getName().getSchema()+"."+sqlTabName;
 		}
 		boolean tableExists=DbUtility.tableExists(conn,tab.getName());
-		super.visit1TableEnd(tab);
+        finishTable(tab);
 		
 		
 		//INSERT INTO gpkg_contents (table_name,data_type,identifier,description,last_change,min_x,min_y,max_x,max_y,srs_id) 
@@ -295,32 +306,15 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 			addCreateLine(new Stmt(stmt2));
 						
 			String dropstmt1="DELETE FROM gpkg_contents WHERE table_name=\'"+tab.getName().getName()+"\'";
-			addDropLine(new Stmt(dropstmt1));
 			String dropstmt2="DELETE FROM gpkg_geometry_columns WHERE table_name=\'"+tab.getName().getName()+"\' AND column_name=\'"+geo.getName()+"\'";
 			addDropLine(new Stmt(dropstmt2));
+            addDropLine(new Stmt(dropstmt1));
 			if(conn!=null) {
 	            if(!tableExists){
-	                Statement dbstmt = null;
-	                try{
-	                    try{
-	                        dbstmt = conn.createStatement();
-	                        EhiLogger.traceBackendCmd(stmt1);
-	                        dbstmt.execute(stmt1);
-	                    }finally{
-	                        dbstmt.close();
-	                    }
-	                    try{
-	                        dbstmt = conn.createStatement();
-	                        EhiLogger.traceBackendCmd(stmt2);
-	                        dbstmt.execute(stmt2);
-	                    }finally{
-	                        dbstmt.close();
-	                    }
-	                }catch(SQLException ex){
-	                    IOException iox=new IOException("failed to add geometry column "+geo.getName()+" to table "+tab.getName());
-	                    iox.initCause(ex);
-	                    throw iox;
-	                }
+                    EhiLogger.traceBackendCmd(stmt1);
+                    totalScript.write(stmt1+";"+newline());
+                    EhiLogger.traceBackendCmd(stmt2);
+                    totalScript.write(stmt2+";"+newline());
 	            }
 			}
 		}
@@ -350,20 +344,8 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 				
 				if(conn!=null) {
 	                if(!tableExists){
-	                    Statement dbstmt = null;
-	                    try{
-	                        try{
-	                            dbstmt = conn.createStatement();
-	                            EhiLogger.traceBackendCmd(idxstmt);
-	                            dbstmt.execute(idxstmt);
-	                        }finally{
-	                            dbstmt.close();
-	                        }
-	                    }catch(SQLException ex){
-	                        IOException iox=new IOException("failed to add index on column "+tab.getName()+"."+idxcol.getName());
-	                        iox.initCause(ex);
-	                        throw iox;
-	                    }
+                        EhiLogger.traceBackendCmd(idxstmt);
+                        totalScript.write(idxstmt+";"+newline());
 	                }
 				}
 			}
@@ -383,20 +365,8 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
         addDropLine(new Stmt(dropstmt2));
         if(conn!=null) {
             if(!tableExists){
-                Statement dbstmt = null;
-                try{
-                    try{
-                        dbstmt = conn.createStatement();
-                        EhiLogger.traceBackendCmd(stmt2);
-                        dbstmt.execute(stmt2);
-                    }finally{
-                        dbstmt.close();
-                    }
-                }catch(SQLException ex){
-                    IOException iox=new IOException("failed to add json column "+col.getName()+" to table "+tab.getName());
-                    iox.initCause(ex);
-                    throw iox;
-                }
+                EhiLogger.traceBackendCmd(stmt2);
+                totalScript.write(stmt2+";"+newline());
             }
         }
     }
@@ -448,4 +418,23 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 				throw new IllegalArgumentException();
 		 }
 	}
+    @Override
+    public void visit1End() throws IOException {
+        String stmt=totalScript.toString();
+        if(conn!=null) {
+            try{
+                Statement dbstmt = conn.createStatement();
+                try{
+                    dbstmt = conn.createStatement();
+                    dbstmt.executeUpdate(stmt);
+                }finally{
+                    dbstmt.close();
+                }
+            }catch(SQLException ex){
+                IOException iox=new IOException("failed schema import: "+ ex.getMessage());
+                iox.initCause(ex);
+                throw iox;
+            }
+        }
+    }
 }
