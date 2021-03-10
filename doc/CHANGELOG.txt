@@ -2,6 +2,7 @@ LATEST SNAPSHOT
 ---------------
 - change DbColNumber.min/max from Integer to Long (ili2db#348)
 - PG: map DbColNumber to bigint if required (ili2db#348)
+- PG: create date/time constraints (ili2db#330)
 
 ehisqlgen 1.13.8 (2019-09-06)
 -----------------------------
