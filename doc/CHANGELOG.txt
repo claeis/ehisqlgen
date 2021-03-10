@@ -1,5 +1,6 @@
 LATEST SNAPSHOT
 ---------------
+- change DbColNumber.min/max from Integer to Long (ili2db#348)
 
 ehisqlgen 1.13.8 (2019-09-06)
 -----------------------------

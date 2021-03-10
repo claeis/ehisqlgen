@@ -7,3 +7,4 @@ support/
 .project
 .classpath
 *~
+/user.properties
