@@ -22,19 +22,18 @@
  */
 package ch.ehi.sqlgen.generator_impl.jdbc;
 
-import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.io.IOException;
-import java.sql.Connection;
 import java.sql.Statement;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.sql.SQLException;
 
 import ch.ehi.basics.logging.EhiLogger;
 import ch.ehi.basics.settings.Settings;
 import ch.ehi.sqlgen.DbUtility;
 import ch.ehi.sqlgen.generator.SqlConfiguration;
-import ch.ehi.sqlgen.generator_impl.jdbc.GeneratorJdbc.Stmt;
 import ch.ehi.sqlgen.repository.*;
 
 /**
@@ -63,6 +62,9 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 
 	private boolean createGeomIdx=false;
 	private ArrayList<DbColumn> indexColumns=null;
+    private DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+    private DateFormat dateTimeFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+    private DateFormat timeFormatter = new SimpleDateFormat("HH:mm:ss.SSS");
 	
 	@Override
 	public void visitSchemaBegin(Settings config, DbSchema schema)
@@ -102,7 +104,13 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 			type="uuid";
 		}else if(column instanceof DbColNumber){
 			DbColNumber col=(DbColNumber)column;
-			type="integer";
+			if(col.getSize()>10 
+			        || (col.getMaxValue()!=null && col.getMaxValue()>(long)Integer.MAX_VALUE)
+			        || (col.getMinValue()!=null && col.getMinValue()<(long)Integer.MIN_VALUE)) {
+	            type="bigint";
+			}else {
+	            type="integer";
+			}
 		}else if(column instanceof DbColVarchar){
 			int colsize=((DbColVarchar)column).getSize();
 			if(colsize==DbColVarchar.UNLIMITED){
@@ -437,11 +445,73 @@ public class GeneratorPostgresql extends GeneratorJdbc {
 
 	                addConstraint(dbTab, constraintName,createstmt, dropstmt);
 	            }
-			}
-            if(dbCol instanceof DbColVarchar && ((DbColVarchar)dbCol).getValueRestriction()!=null){
+            }else if(dbCol instanceof DbColDate && (((DbColDate)dbCol).getMinValue()!=null || ((DbColDate)dbCol).getMaxValue()!=null)){
                 if(dbCol.getArraySize()==DbColumn.NOT_AN_ARRAY) {
-                    DbColVarchar dbColTxt=(DbColVarchar)dbCol;
+                    DbColDate dbColNum=(DbColDate)dbCol;
                     String createstmt=null;
+                    String action="";
+                    if(dbColNum.getMinValue()!=null || dbColNum.getMaxValue()!=null){
+                        if(dbColNum.getMaxValue()==null){
+                            action=">="+toDateLiteral(dbColNum.getMinValue());
+                        }else if(dbColNum.getMinValue()==null){
+                            action="<="+toDateLiteral(dbColNum.getMaxValue());
+                        }else{
+                            action="BETWEEN "+toDateLiteral(dbColNum.getMinValue())+" AND "+toDateLiteral(dbColNum.getMaxValue());
+                        }
+                    }
+                    String constraintName=createConstraintName(dbTab,"check",dbCol.getName());
+                    createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" CHECK( "+dbCol.getName()+" "+action+")";
+                    
+                    String dropstmt=null;
+                    dropstmt="ALTER TABLE "+sqlTabName+" DROP CONSTRAINT "+constraintName;
+                    addConstraint(dbTab, constraintName,createstmt, dropstmt);
+                }
+            }else if(dbCol instanceof DbColTime && (((DbColTime)dbCol).getMinValue()!=null || ((DbColTime)dbCol).getMaxValue()!=null)){
+                if(dbCol.getArraySize()==DbColumn.NOT_AN_ARRAY) {
+                    DbColTime dbColNum=(DbColTime)dbCol;
+                    String createstmt=null;
+                    String action="";
+                    if(dbColNum.getMinValue()!=null || dbColNum.getMaxValue()!=null){
+                        if(dbColNum.getMaxValue()==null){
+                            action=">="+toTimeLiteral(dbColNum.getMinValue());
+                        }else if(dbColNum.getMinValue()==null){
+                            action="<="+toTimeLiteral(dbColNum.getMaxValue());
+                        }else{
+                            action="BETWEEN "+toTimeLiteral(dbColNum.getMinValue())+" AND "+toTimeLiteral(dbColNum.getMaxValue());
+                        }
+                    }
+                    String constraintName=createConstraintName(dbTab,"check",dbCol.getName());
+                    createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" CHECK( "+dbCol.getName()+" "+action+")";
+                    
+                    String dropstmt=null;
+                    dropstmt="ALTER TABLE "+sqlTabName+" DROP CONSTRAINT "+constraintName;
+                    addConstraint(dbTab, constraintName,createstmt, dropstmt);
+                }
+            }else if(dbCol instanceof DbColDateTime && (((DbColDateTime)dbCol).getMinValue()!=null || ((DbColDateTime)dbCol).getMaxValue()!=null)){
+                if(dbCol.getArraySize()==DbColumn.NOT_AN_ARRAY) {
+                    DbColDateTime dbColNum=(DbColDateTime)dbCol;
+                    String createstmt=null;
+                    String action="";
+                    if(dbColNum.getMinValue()!=null || dbColNum.getMaxValue()!=null){
+                        if(dbColNum.getMaxValue()==null){
+                            action=">="+toDateTimeLiteral(dbColNum.getMinValue());
+                        }else if(dbColNum.getMinValue()==null){
+                            action="<="+toDateTimeLiteral(dbColNum.getMaxValue());
+                        }else{
+                            action="BETWEEN "+toDateTimeLiteral(dbColNum.getMinValue())+" AND "+toDateTimeLiteral(dbColNum.getMaxValue());
+                        }
+                    }
+                    String constraintName=createConstraintName(dbTab,"check",dbCol.getName());
+                    createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" CHECK( "+dbCol.getName()+" "+action+")";
+                    
+                    String dropstmt=null;
+                    dropstmt="ALTER TABLE "+sqlTabName+" DROP CONSTRAINT "+constraintName;
+                    addConstraint(dbTab, constraintName,createstmt, dropstmt);
+                }
+			}
+            if(dbCol instanceof DbColVarchar && dbCol.getArraySize()==DbColumn.NOT_AN_ARRAY) {
+                DbColVarchar dbColTxt=(DbColVarchar)dbCol;
+                if(dbColTxt.getValueRestriction()!=null){
                     StringBuffer action=new StringBuffer("IN (");
                     String sep="";
                     for(String restrictedValue:dbColTxt.getValueRestriction()){
@@ -453,17 +523,51 @@ public class GeneratorPostgresql extends GeneratorJdbc {
                     }
                     action.append(")");
                     String constraintName=createConstraintName(dbTab,"check",dbCol.getName());
-                    //  ALTER TABLE ce.classb1 ADD CONSTRAINT classb1_attr_check CHECK (attr IN ('a','b'));
-                    createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" CHECK( "+dbCol.getName()+" "+action.toString()+")";
+                    String createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" CHECK( "+dbCol.getName()+" "+action.toString()+")";
+
+                    String dropstmt=null;
+                    dropstmt="ALTER TABLE "+sqlTabName+" DROP CONSTRAINT "+constraintName;
+
+                    addConstraint(dbTab, constraintName,createstmt, dropstmt);
+                }else if(DbColVarchar.KIND_NORMALIZED.equals(dbColTxt.getKind()) || dbColTxt.getMinLength()!=null) {
                     
-                    //  ALTER TABLE ce.classb1 DROP CONSTRAINT classb1_t_id_fkey;
+                    String action="";
+                    String sep="";
+                    if(DbColVarchar.KIND_NORMALIZED.equals(dbColTxt.getKind())){
+                        action+=sep+"position('\\n' IN "+dbCol.getName()+")=0 AND position('\\r' IN "+dbCol.getName()+")=0 AND position('\\t' IN "+dbCol.getName()+")=0";
+                        sep=" AND ";
+                    }
+                    if(dbColTxt.getMinLength()!=null){
+                        action+=sep+"length(trim("+dbCol.getName()+"))>="+dbColTxt.getMinLength();
+                        sep=" AND ";
+                    }
+                    String constraintName=createConstraintName(dbTab,"check",dbCol.getName());
+                    String createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" CHECK( "+action.toString()+")";
+
                     String dropstmt=null;
                     dropstmt="ALTER TABLE "+sqlTabName+" DROP CONSTRAINT "+constraintName;
 
                     addConstraint(dbTab, constraintName,createstmt, dropstmt);
                 }
+                
+            }
+            if(dbCol instanceof DbColVarchar && ((DbColVarchar)dbCol).getValueRestriction()!=null){
+                if(dbCol.getArraySize()==DbColumn.NOT_AN_ARRAY) {
+                    DbColVarchar dbColTxt=(DbColVarchar)dbCol;
+                }
             }
 		}
 	}
-
+	private String toDateLiteral(java.sql.Date val)
+	{
+	    return "DATE '"+dateFormatter.format(val)+"'";
+	}
+    private String toTimeLiteral(java.sql.Time val)
+    {
+        return "TIME '"+timeFormatter.format(val)+"'";
+    }
+    private String toDateTimeLiteral(java.sql.Timestamp val)
+    {
+        return "TIMESTAMP '"+dateTimeFormatter.format(val)+"'";
+    }
 }
