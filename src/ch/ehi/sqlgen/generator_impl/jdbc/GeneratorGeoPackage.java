@@ -52,6 +52,7 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
     private ArrayList<DbColGeometry> geomColumns=null;
     private ArrayList<DbColJson> jsonColumns=null;
     private ArrayList<DbColumn> arrayColumns=null;
+    private DbColumn primaryKeyColumn=null;
     private java.io.StringWriter totalScript=null;
 	@Override
 	public void visitSchemaBegin(Settings config, DbSchema schema)
@@ -169,6 +170,7 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
             String isNull=column.isNotNull()?"NOT NULL":"NULL";
             if(column.isPrimaryKey()){
                 isNull="NOT NULL PRIMARY KEY";
+                primaryKeyColumn = column;
             }
             String sep=" ";
             String defaultValue="";
@@ -331,15 +333,131 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
         arrayColumns=null;
 
 		for(DbColumn idxcol:indexColumns){
-			
-			String idxstmt=null;
-			String idxName=createConstraintName(tab,"idx",idxcol.getName().toLowerCase());
+
 			if(idxcol instanceof DbColGeometry){
-				//idxstmt="CREATE INDEX "+tab.getName().getName().toLowerCase()+"_"+idxcol.getName().toLowerCase()+"_idx ON "+sqlTabName.toLowerCase()+" USING GIST ( "+idxcol.getName().toLowerCase()+" )";
+				if (primaryKeyColumn != null) {
+					DbColGeometry geo = (DbColGeometry) idxcol;
+					String primaryKey = primaryKeyColumn.getName();
+
+					String stmt = "INSERT INTO gpkg_extensions (table_name,column_name,extension_name,definition,scope)"
+					+ "VALUES (\'" + tab.getName().getName() + "\',\'" + geo.getName() + "\',\'gpkg_rtree_index\',\'http://www.geopackage.org/spec120/#extension_rtree\',\'write-only\')";
+
+					addCreateLine(new Stmt(stmt));
+
+					String dropstmt1 = "DELETE FROM gpkg_extensions WHERE table_name=\'" + tab.getName().getName() + "\' AND column_name=\'" + geo.getName() + "\'";
+					addDropLine(new Stmt(dropstmt1));
+					if (conn != null) {
+						if (!tableExists) {
+							EhiLogger.traceBackendCmd(stmt);
+							totalScript.write(stmt + ";" + newline());
+						}
+					}
+
+					String createStmt = "CREATE VIRTUAL TABLE \"rtree_" + tab.getName().getName() + "_" + geo.getName() + "\" USING rtree"
+					+ "(id,minx,maxx,miny,maxy)";
+
+					addCreateLine(new Stmt(createStmt));
+
+					String dropstmt2 = "DROP TABLE \"rtree_" + tab.getName().getName() + "_" + geo.getName() + "\"";
+					addDropLine(new Stmt(dropstmt2));
+
+					String populateStmt = "INSERT INTO rtree_" + tab.getName().getName() + "_" + geo.getName() + " "
+					+ "SELECT " + primaryKey + ",ST_MinX(" + geo.getName() + "),ST_MaxX(" + geo.getName() + "),ST_MinY(" + geo.getName() + "),ST_MaxY(" + geo.getName() + ") FROM " + tab.getName().getName() + " WHERE " + geo.getName() + " NOT NULL AND NOT ST_IsEmpty(" + geo.getName() + ")";
+
+					addCreateLine(new Stmt(populateStmt));
+
+					/* Conditions: Insertion of non-empty geometry
+					 * Actions: Insert record into rtree */
+					String triggerStmt1 = "CREATE TRIGGER \"rtree_" + tab.getName().getName() + "_" + geo.getName() + "_insert\" AFTER INSERT ON \"" + tab.getName().getName() + "\" "
+					+ "WHEN (NEW.\"" + geo.getName() + "\" NOT NULL AND NOT ST_IsEmpty(NEW.\"" + geo.getName() + "\")) "
+					+ "BEGIN "
+					+ "INSERT OR REPLACE INTO \"rtree_" + tab.getName().getName() + "_" + geo.getName() + "\" VALUES ("
+					+ "NEW.\"" + primaryKey + "\",ST_MinX(NEW.\"" + geo.getName() + "\"),ST_MaxX(NEW.\"" + geo.getName() + "\"),ST_MinY(NEW.\"" + geo.getName() + "\"),ST_MaxY(NEW.\"" + geo.getName() + "\")); "
+					+ "END";
+
+					addCreateLine(new Stmt(triggerStmt1));
+
+					/* Conditions: Update of geometry column to non-empty geometry
+					 * No row ID change
+					 * Actions: Update record in rtree */
+					String triggerStmt2 = "CREATE TRIGGER \"rtree_" + tab.getName().getName() + "_" + geo.getName() + "_update1\" AFTER UPDATE OF \"" + geo.getName() + "\" ON \"" + tab.getName().getName() + "\" "
+					+ "WHEN OLD.\"" + primaryKey + "\" = NEW.\"" + primaryKey + "\" AND (NEW.\"" + geo.getName() + "\" NOTNULL AND NOT ST_IsEmpty(NEW.\"" + geo.getName() + "\")) "
+					+ "BEGIN "
+					+ "INSERT OR REPLACE INTO \"rtree_" + tab.getName().getName() + "_" + geo.getName() + "\" VALUES ("
+					+ "NEW.\"" + primaryKey + "\",ST_MinX(NEW.\"" + geo.getName() + "\"),ST_MaxX(NEW.\"" + geo.getName() + "\"),ST_MinY(NEW.\"" + geo.getName() + "\"),ST_MaxY(NEW.\"" + geo.getName() + "\")); "
+					+ "END";
+
+					addCreateLine(new Stmt(triggerStmt2));
+
+					/* Conditions: Update of geometry column to empty geometry
+					 * No row ID change
+					 * Actions: Remove record from rtree */
+					String triggerStmt3 = "CREATE TRIGGER \"rtree_" + tab.getName().getName() + "_" + geo.getName() + "_update2\" AFTER UPDATE OF \"" + geo.getName() + "\" ON \"" + tab.getName().getName() + "\" "
+					+ "WHEN OLD.\"" + primaryKey + "\" = NEW.\"" + primaryKey + "\" AND (NEW.\"" + geo.getName() + "\" ISNULL OR ST_IsEmpty(NEW.\"" + geo.getName() + "\")) "
+					+ "BEGIN "
+					+ "DELETE FROM \"rtree_" + tab.getName().getName() + "_" + geo.getName() + "\" WHERE id = OLD.\"" + primaryKey + "\"; "
+					+ "END";
+
+					addCreateLine(new Stmt(triggerStmt3));
+
+					/* Conditions: Update of any column
+					 * Row ID change
+					 * Non-empty geometry
+					 * Actions: Remove record from rtree for old <i>
+					 * Insert record into rtree for new <i> */
+					String triggerStmt4 = "CREATE TRIGGER \"rtree_" + tab.getName().getName() + "_" + geo.getName() + "_update3\" AFTER UPDATE ON \"" + tab.getName().getName() + "\" "
+					+ "WHEN OLD.\"" + primaryKey + "\" != NEW.\"" + primaryKey + "\" AND (NEW.\"" + geo.getName() + "\" NOTNULL AND NOT ST_IsEmpty(NEW.\"" + geo.getName() + "\")) "
+					+ "BEGIN "
+					+ "DELETE FROM \"rtree_" + tab.getName().getName() + "_" + geo.getName() + "\" WHERE id = OLD.\"" + primaryKey + "\"; "
+					+ "INSERT OR REPLACE INTO \"rtree_" + tab.getName().getName() + "_" + geo.getName() + "\" VALUES ("
+					+ "NEW.\"" + primaryKey + "\",ST_MinX(NEW.\"" + geo.getName() + "\"),ST_MaxX(NEW.\"" + geo.getName() + "\"),ST_MinY(NEW.\"" + geo.getName() + "\"),ST_MaxY(NEW.\"" + geo.getName() + "\")); "
+					+ "END";
+
+					addCreateLine(new Stmt(triggerStmt4));
+
+					/* Conditions: Update of any column
+					 * Row ID change
+					 * Empty geometry
+					 * Actions: Remove record from rtree for old and new <i> */
+					String triggerStmt5 = "CREATE TRIGGER \"rtree_" + tab.getName().getName() + "_" + geo.getName() + "_update4\" AFTER UPDATE ON \"" + tab.getName().getName() + "\" "
+					+ "WHEN OLD.\"" + primaryKey + "\" != NEW.\"" + primaryKey + "\" AND (NEW.\"" + geo.getName() + "\" ISNULL OR ST_IsEmpty(NEW.\"" + geo.getName() + "\")) "
+					+ "BEGIN "
+					+ "DELETE FROM \"rtree_" + tab.getName().getName() + "_" + geo.getName() + "\" WHERE id IN (OLD.\"" + primaryKey + "\",NEW.\"" + primaryKey + "\"); "
+					+ "END";
+
+					addCreateLine(new Stmt(triggerStmt5));
+
+					/* Conditions: Row deleted
+					 * Actions: Remove record from rtree for old <i>
+					 */
+					String triggerStmt6 = "CREATE TRIGGER \"rtree_" + tab.getName().getName() + "_" + geo.getName() + "_delete\" AFTER DELETE ON \"" + tab.getName().getName() + "\" "
+					+ "WHEN OLD.\"" + geo.getName() + "\" NOT NULL BEGIN "
+					+ "DELETE FROM \"rtree_" + tab.getName().getName() + "_" + geo.getName() + "\" WHERE id = OLD.\"" + primaryKey + "\"; "
+					+ "END";
+
+					addCreateLine(new Stmt(triggerStmt6));
+
+					String[] triggerStmts = {triggerStmt1, triggerStmt2, triggerStmt3, triggerStmt4, triggerStmt5, triggerStmt6};
+					if (conn != null) {
+						if (!tableExists) {
+							EhiLogger.traceBackendCmd(createStmt);
+							totalScript.write(createStmt + ";" + newline());
+							EhiLogger.traceBackendCmd(populateStmt);
+							totalScript.write(populateStmt + ";" + newline());
+							for (String triggerStmt : triggerStmts) {
+								EhiLogger.traceBackendCmd(triggerStmt);
+								totalScript.write(triggerStmt + ";" + newline());
+							}
+						}
+					}
+				} else {
+					EhiLogger.logError("Not able to create a rtree spatial index on geometry column "+idxcol+" of table "+tab.getName().getName()+". The table is missing a primary key.");
+					throw new IllegalStateException();
+				}
 			}else{
-				idxstmt="CREATE INDEX "+idxName+" ON "+sqlTabName.toLowerCase()+" ( "+idxcol.getName().toLowerCase()+" )";
-			}
-			if(idxstmt!=null){
+				String idxName=createConstraintName(tab,"idx",idxcol.getName().toLowerCase());
+				String idxstmt="CREATE INDEX "+idxName+" ON "+sqlTabName.toLowerCase()+" ( "+idxcol.getName().toLowerCase()+" )";
+
 				addCreateLine(new Stmt(idxstmt));
 				
 				if(conn!=null) {
