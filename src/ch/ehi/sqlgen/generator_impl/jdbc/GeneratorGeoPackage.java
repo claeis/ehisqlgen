@@ -469,6 +469,7 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 			}
 		}
 		indexColumns=null;
+		primaryKeyColumn=null;
 		
 	}
 
