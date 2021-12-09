@@ -376,6 +376,9 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 
 					addCreateLine(new Stmt(triggerStmt1));
 
+					String dropstmt3 = "DROP TRIGGER IF EXISTS \"rtree_" + tab.getName().getName() + "_" + geo.getName() + "_insert\"";
+					addDropLine(new Stmt(dropstmt3));
+
 					/* Conditions: Update of geometry column to non-empty geometry
 					 * No row ID change
 					 * Actions: Update record in rtree */
@@ -388,6 +391,9 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 
 					addCreateLine(new Stmt(triggerStmt2));
 
+					String dropstmt4 = "DROP TRIGGER IF EXISTS \"rtree_" + tab.getName().getName() + "_" + geo.getName() + "_update1\"";
+					addDropLine(new Stmt(dropstmt4));
+
 					/* Conditions: Update of geometry column to empty geometry
 					 * No row ID change
 					 * Actions: Remove record from rtree */
@@ -398,6 +404,9 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 					+ "END";
 
 					addCreateLine(new Stmt(triggerStmt3));
+
+					String dropstmt5 = "DROP TRIGGER IF EXISTS \"rtree_" + tab.getName().getName() + "_" + geo.getName() + "_update2\"";
+					addDropLine(new Stmt(dropstmt5));
 
 					/* Conditions: Update of any column
 					 * Row ID change
@@ -414,6 +423,9 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 
 					addCreateLine(new Stmt(triggerStmt4));
 
+					String dropstmt6 = "DROP TRIGGER IF EXISTS \"rtree_" + tab.getName().getName() + "_" + geo.getName() + "_update3\"";
+					addDropLine(new Stmt(dropstmt6));
+
 					/* Conditions: Update of any column
 					 * Row ID change
 					 * Empty geometry
@@ -426,6 +438,9 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 
 					addCreateLine(new Stmt(triggerStmt5));
 
+					String dropstmt7 = "DROP TRIGGER IF EXISTS \"rtree_" + tab.getName().getName() + "_" + geo.getName() + "_update4\"";
+					addDropLine(new Stmt(dropstmt7));
+
 					/* Conditions: Row deleted
 					 * Actions: Remove record from rtree for old <i>
 					 */
@@ -435,6 +450,9 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 					+ "END";
 
 					addCreateLine(new Stmt(triggerStmt6));
+
+					String dropstmt8 = "DROP TRIGGER IF EXISTS \"rtree_" + tab.getName().getName() + "_" + geo.getName() + "_delete\"";
+					addDropLine(new Stmt(dropstmt8));
 
 					String[] triggerStmts = {triggerStmt1, triggerStmt2, triggerStmt3, triggerStmt4, triggerStmt5, triggerStmt6};
 					if (conn != null) {
