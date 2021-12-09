@@ -335,7 +335,6 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 		for(DbColumn idxcol:indexColumns){
 
 			if(idxcol instanceof DbColGeometry){
-				if (primaryKeyColumn != null) {
 					DbColGeometry geo = (DbColGeometry) idxcol;
 					String primaryKey = primaryKeyColumn.getName();
 
@@ -450,10 +449,6 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 							}
 						}
 					}
-				} else {
-					EhiLogger.logError("Not able to create a rtree spatial index on geometry column "+idxcol+" of table "+tab.getName().getName()+". The table is missing a primary key.");
-					throw new IllegalStateException();
-				}
 			}else{
 				String idxName=createConstraintName(tab,"idx",idxcol.getName().toLowerCase());
 				String idxstmt="CREATE INDEX "+idxName+" ON "+sqlTabName.toLowerCase()+" ( "+idxcol.getName().toLowerCase()+" )";
