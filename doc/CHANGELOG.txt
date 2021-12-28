@@ -1,5 +1,8 @@
 LATEST SNAPSHOT
 ---------------
+
+ehisqlgen 1.14.1 (2021-12-28)
+-----------------------------
 - create GPKG spatial index (ili2db#391)
 
 ehisqlgen 1.14.0 (2021-03-11)
