@@ -557,6 +557,17 @@ public class GeneratorPostgresql extends GeneratorJdbc {
                 }
             }
 		}
+		for(java.util.Iterator<String> cnstrIt=dbTab.iteratorNativeConstraints();cnstrIt.hasNext();){
+		    String constraintName=cnstrIt.next();
+		    String action=dbTab.getNativeConstraint(constraintName);
+            String createstmt="ALTER TABLE "+sqlTabName+" ADD CONSTRAINT "+constraintName+" "+action;
+            
+            String dropstmt=null;
+            dropstmt="ALTER TABLE "+sqlTabName+" DROP CONSTRAINT "+constraintName;
+
+            addConstraint(dbTab, constraintName,createstmt, dropstmt);
+		    
+		}
 	}
 	private String toDateLiteral(java.sql.Date val)
 	{

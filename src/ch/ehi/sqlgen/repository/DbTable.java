@@ -34,9 +34,10 @@ import ch.ehi.sqlgen.repository.DbEnumEle;
 
 public class DbTable
 {
-  private java.util.List column = new java.util.ArrayList();
+  private java.util.List<DbColumn> column = new java.util.ArrayList<DbColumn>();
   private String comment=null;
   private DbSchema schema=null;
+  private java.util.Map<String,String> nativeConstraints=new java.util.TreeMap<String,String>();
 
   /** add a Column.
    *  
@@ -108,7 +109,7 @@ public class DbTable
   /** used to enumerate all connected Columns.
    *  @see #addColumn
    */
-  public java.util.Iterator iteratorColumn()
+  public java.util.Iterator<DbColumn> iteratorColumn()
   {
     return column.iterator();
   }
@@ -132,7 +133,7 @@ public class DbTable
     return column.size();
   }
 
-  private java.util.Set constraint = new java.util.HashSet();
+  private java.util.Set<DbConstraint> constraint = new java.util.HashSet<DbConstraint>();
 
   /** add a Constraint.
    *  
@@ -175,7 +176,7 @@ public class DbTable
   /** used to enumerate all connected Constraints.
    *  @see #addConstraint
    */
-  public java.util.Iterator iteratorConstraint()
+  public java.util.Iterator<DbConstraint> iteratorConstraint()
   {
     return constraint.iterator();
   }
@@ -199,7 +200,7 @@ public class DbTable
     return constraint.size();
   }
 
-  private java.util.Set index = new java.util.HashSet();
+  private java.util.Set<DbIndex> index = new java.util.HashSet<DbIndex>();
 
   /** add a Index.
    *  
@@ -247,7 +248,7 @@ public class DbTable
   /** used to enumerate all connected Indexs.
    *  @see #addIndex
    */
-  public java.util.Iterator iteratorIndex()
+  public java.util.Iterator<DbIndex> iteratorIndex()
   {
     return index.iterator();
   }
@@ -294,7 +295,7 @@ public class DbTable
     
     return;
   }
-  private java.util.Set enumEle = new java.util.HashSet();
+  private java.util.Set<DbEnumEle> enumEle = new java.util.HashSet<DbEnumEle>();
 
   /** add a EnumEle.
    *  
@@ -337,7 +338,7 @@ public class DbTable
   /** used to enumerate all connected EnumEles.
    *  @see #addEnumEle
    */
-  public java.util.Iterator iteratorEnumEle()
+  public java.util.Iterator<DbEnumEle> iteratorEnumEle()
   {
     return enumEle.iterator();
   }
@@ -425,7 +426,7 @@ public class DbTable
   }
 
 	public DbColumn getColumn(String name){
-		java.util.Iterator coli=iteratorColumn();
+		java.util.Iterator<DbColumn> coli=iteratorColumn();
 		while(coli.hasNext()){
 			DbColumn col=(DbColumn)coli.next();
 			if(col.getName().equals(name)){
@@ -434,7 +435,7 @@ public class DbTable
 		}
 		throw new java.lang.IllegalArgumentException("DbColumn "+name+"doesnt exist");
 	}
-	private HashMap customValues=new HashMap();
+	private HashMap<String,String> customValues=new HashMap<String,String>();
 	/** gets a custom property value. Used to add driver or db specific settings.
 	 * @param name of property.
 	 * @return value or null. Never returns an empty String.
@@ -451,7 +452,24 @@ public class DbTable
 			customValues.put(name, value);
 		}
 	}
-
+    public String getNativeConstraint(String name) {
+        String value=nativeConstraints.get(name);
+        return value;
+    }
+    public void setNativeConstraint(String name,String value) {
+        value=ch.ehi.basics.tools.StringUtility.purge(value);
+        if(value==null){
+            nativeConstraints.remove(name);
+        }else{
+            nativeConstraints.put(name, value);
+        }
+    }
+    public java.util.Iterator<String> iteratorNativeConstraints() {
+        return nativeConstraints.keySet().iterator();
+    }
+    public int sizeNativeConstraints() {
+        return nativeConstraints.size();
+    }
 	private boolean deleteDataIfTableExists=false;
 
 	public boolean isDeleteDataIfTableExists() {
