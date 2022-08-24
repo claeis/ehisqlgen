@@ -1,5 +1,8 @@
 LATEST SNAPSHOT
 ---------------
+
+ehisqlgen 1.15.0 (2022-08-24)
+-----------------------------
 - added DbTable.nativeConstraints
 
 ehisqlgen 1.14.1 (2021-12-28)
