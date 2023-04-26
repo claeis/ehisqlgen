@@ -1,4 +1,4 @@
-ehisqlgen 1.15.1 (SNAPSHOT)
+ehisqlgen 1.16.0 (SNAPSHOT)
 ---------------
 - GPKG: support multi geom col per table (ili2db#511)
 - ehibasics-1.4.1

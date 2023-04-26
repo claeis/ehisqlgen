@@ -295,28 +295,39 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 		//INSERT INTO gpkg_geometry_columns (table_name,column_name,geometry_type_name,srs_id,z,m) 
 		//VALUES ('BoFlaeche' ,'Geometrie' ,'CURVEPOLYGON',21781,0,0);
 		
-		if(geomColumns.size()>0){
-			DbColGeometry geo=geomColumns.get(0);
+		for(int colIdx=0;colIdx<geomColumns.size();colIdx++){
+			DbColGeometry geo=geomColumns.get(colIdx);
 			String srsId="(SELECT srs_id FROM gpkg_spatial_ref_sys WHERE organization=\'"+geo.getSrsAuth()+"\' AND organization_coordsys_id="+geo.getSrsId()+")";
 			String cmt=tab.getComment()==null?"null":"\'"+tab.getComment()+"\'";
-			String stmt1="INSERT INTO gpkg_contents (table_name,data_type,identifier,description,last_change,min_x,min_y,max_x,max_y,srs_id)" 
-			+"VALUES (\'"+tab.getName().getName()+"\','features',\'"+tab.getName().getName()+"\',"+cmt+",\'"+today+"\',"+geo.getMin1()+","+geo.getMin2()+","+geo.getMax1()+","+geo.getMax2()+","+srsId+")";
-			String stmt2="INSERT INTO gpkg_geometry_columns (table_name,column_name,geometry_type_name,srs_id,z,m)" 
+			String stmtGeomContents=null;
+			if(colIdx==1) {
+	            stmtGeomContents="INSERT INTO gpkg_contents (table_name,data_type,identifier,description,last_change,min_x,min_y,max_x,max_y,srs_id)" 
+	                    +"VALUES (\'"+tab.getName().getName()+"\','features',\'"+tab.getName().getName()+"\',"+cmt+",\'"+today+"\',"+geo.getMin1()+","+geo.getMin2()+","+geo.getMax1()+","+geo.getMax2()+","+srsId+")";
+			}
+			String stmtGeomCols="INSERT INTO gpkg_geometry_columns (table_name,column_name,geometry_type_name,srs_id,z,m)" 
 			+"VALUES (\'"+tab.getName().getName()+"\',\'"+geo.getName()+"\' ,\'"+getGpkgGeometryTypename(geo.getType())+"\',"+srsId+","+(geo.getDimension()==2?"0":"1")+",0)";
-			
-			addCreateLine(new Stmt(stmt1));
-			addCreateLine(new Stmt(stmt2));
+            if(colIdx==1) {
+	            addCreateLine(new Stmt(stmtGeomContents));
+			}
+			addCreateLine(new Stmt(stmtGeomCols));
 						
-			String dropstmt1="DELETE FROM gpkg_contents WHERE table_name=\'"+tab.getName().getName()+"\'";
-			String dropstmt2="DELETE FROM gpkg_geometry_columns WHERE table_name=\'"+tab.getName().getName()+"\' AND column_name=\'"+geo.getName()+"\'";
-			addDropLine(new Stmt(dropstmt2));
-            addDropLine(new Stmt(dropstmt1));
+			String dropstmtGeomContents=null;
+			if(colIdx==1) {
+	            dropstmtGeomContents="DELETE FROM gpkg_contents WHERE table_name=\'"+tab.getName().getName()+"\'";
+			}
+			String dropstmtGeomCols="DELETE FROM gpkg_geometry_columns WHERE table_name=\'"+tab.getName().getName()+"\' AND column_name=\'"+geo.getName()+"\'";
+			addDropLine(new Stmt(dropstmtGeomCols));
+            if(colIdx==1) {
+                addDropLine(new Stmt(dropstmtGeomContents));
+            }
 			if(conn!=null) {
 	            if(!tableExists){
-                    EhiLogger.traceBackendCmd(stmt1);
-                    totalScript.write(stmt1+";"+newline());
-                    EhiLogger.traceBackendCmd(stmt2);
-                    totalScript.write(stmt2+";"+newline());
+	                if(colIdx==1) {
+	                    EhiLogger.traceBackendCmd(stmtGeomContents);
+	                    totalScript.write(stmtGeomContents+";"+newline());
+	                }
+                    EhiLogger.traceBackendCmd(stmtGeomCols);
+                    totalScript.write(stmtGeomCols+";"+newline());
 	            }
 			}
 		}

@@ -1,5 +1,5 @@
 group 'ch.ehi'
-version '1.15.1'+System.getProperty('release','-SNAPSHOT')
+version '1.16.0'+System.getProperty('release','-SNAPSHOT')
 
 apply plugin: "java"
 apply plugin: "maven"
