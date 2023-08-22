@@ -1,5 +1,5 @@
 group 'ch.ehi'
-version '1.15.0'+System.getProperty('release','-SNAPSHOT')
+version '1.16.0'+System.getProperty('release','-SNAPSHOT')
 
 apply plugin: "java"
 apply plugin: "maven"
@@ -8,11 +8,22 @@ configurations {
     deployerJars
 }
 
-sourceCompatibility = "1.6" 
-targetCompatibility = "1.6"
+if(!JavaVersion.current().isJava8()){
+  compileJava.options.compilerArgs.addAll(['--release', '6'])
+}else{
+  sourceCompatibility = JavaVersion.VERSION_1_6 
+  targetCompatibility = JavaVersion.VERSION_1_6
+}
+compileJava.options.encoding = 'US-ASCII'
+
+// to get the latest SNAPSHOT uncomment the following lines
+//configurations.all {
+    // check for updates every build
+    //resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+//}
 
 dependencies {
-    compile group: 'ch.ehi', name: 'ehibasics', version: '1.1.0'
+    compile group: 'ch.ehi', name: 'ehibasics', version: '1.4.1'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 	testCompile group: 'org.hamcrest', name: 'hamcrest-library', version: '1.3'
 	testRuntime group: 'org.postgresql', name: 'postgresql', version: '42.1.4.jre6'
