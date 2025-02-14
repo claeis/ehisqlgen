@@ -210,13 +210,18 @@ public class DbUtility {
 	public static void createSchema(Connection conn,String schemaName)
 	{
 		try {
-			java.sql.Statement stmt=conn.createStatement();
-			String sql="CREATE SCHEMA "+schemaName;
-			EhiLogger.traceBackendCmd(sql);
-			stmt.execute(sql);
+			Statement stmt = null;
+			try {
+				stmt=conn.createStatement();
+				String sql="CREATE SCHEMA "+schemaName;
+				EhiLogger.traceBackendCmd(sql);
+				stmt.execute(sql);
+			} finally {
+				stmt.close();
+			}
 		} catch (SQLException e) {
 			throw new IllegalStateException("failed to create schema "+schemaName,e);
-		}
+		} 
 	}
 
 	public static void executeSqlScript(Connection conn,java.io.InputStreamReader script)

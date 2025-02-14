@@ -1,3 +1,7 @@
+ehisqlgen 1.16.1 (2025-02-14)
+-----------------------------
+- close jdbc statement after creating schema
+
 ehisqlgen 1.16.0 (2023-08-22)
 -----------------------------
 - GPKG: support multi geom col per table (ili2db#511)
