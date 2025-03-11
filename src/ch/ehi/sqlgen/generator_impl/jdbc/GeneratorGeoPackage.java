@@ -46,7 +46,9 @@ import ch.ehi.sqlgen.repository.*;
  */
 public class GeneratorGeoPackage extends GeneratorJdbc {
 
-	private boolean createGeomIdx=false;
+	private static final String GPKG_CONTENTS_DATA_TYPE_FEATURES = "features";
+    private static final String GPKG_CONTENTS_DATA_TYPE_ATTRIBUTES = "attributes";
+    private boolean createGeomIdx=false;
 	private String today="";
     private ArrayList<DbColumn> indexColumns=null;
     private ArrayList<DbColGeometry> geomColumns=null;
@@ -288,48 +290,55 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 		boolean tableExists=DbUtility.tableExists(conn,tab.getName());
         finishTable(tab);
 		
-		
-		//INSERT INTO gpkg_contents (table_name,data_type,identifier,description,last_change,min_x,min_y,max_x,max_y,srs_id) 
-		//VALUES ('BoFlaeche','features','DM01.BoFlaeche','Beschreibung BoFlaeche','2016-01-01T08:19:32.000Z',580000.000,205000.000,660000.000,270000.000,21781)
+		if(geomColumns.size()==0) {
+		    
+            String cmt=tab.getComment()==null?"null":"\'"+tab.getComment()+"\'";
+            String stmtGeomContents=null;
+            stmtGeomContents="INSERT INTO gpkg_contents (table_name,data_type,identifier,description,last_change)" 
+                    +"VALUES (\'"+tab.getName().getName()+"\','"+GPKG_CONTENTS_DATA_TYPE_ATTRIBUTES+"',\'"+tab.getName().getName()+"\',"+cmt+",\'"+today+"\',"+")";
+		}else {
+	        //INSERT INTO gpkg_contents (table_name,data_type,identifier,description,last_change,min_x,min_y,max_x,max_y,srs_id) 
+	        //VALUES ('BoFlaeche','features','DM01.BoFlaeche','Beschreibung BoFlaeche','2016-01-01T08:19:32.000Z',580000.000,205000.000,660000.000,270000.000,21781)
 
-		//INSERT INTO gpkg_geometry_columns (table_name,column_name,geometry_type_name,srs_id,z,m) 
-		//VALUES ('BoFlaeche' ,'Geometrie' ,'CURVEPOLYGON',21781,0,0);
-		
-		for(int colIdx=0;colIdx<geomColumns.size();colIdx++){
-			DbColGeometry geo=geomColumns.get(colIdx);
-			String srsId="(SELECT srs_id FROM gpkg_spatial_ref_sys WHERE organization=\'"+geo.getSrsAuth()+"\' AND organization_coordsys_id="+geo.getSrsId()+")";
-			String cmt=tab.getComment()==null?"null":"\'"+tab.getComment()+"\'";
-			String stmtGeomContents=null;
-			if(colIdx==0) {
-	            stmtGeomContents="INSERT INTO gpkg_contents (table_name,data_type,identifier,description,last_change,min_x,min_y,max_x,max_y,srs_id)" 
-	                    +"VALUES (\'"+tab.getName().getName()+"\','features',\'"+tab.getName().getName()+"\',"+cmt+",\'"+today+"\',"+geo.getMin1()+","+geo.getMin2()+","+geo.getMax1()+","+geo.getMax2()+","+srsId+")";
-			}
-			String stmtGeomCols="INSERT INTO gpkg_geometry_columns (table_name,column_name,geometry_type_name,srs_id,z,m)" 
-			+"VALUES (\'"+tab.getName().getName()+"\',\'"+geo.getName()+"\' ,\'"+getGpkgGeometryTypename(geo.getType())+"\',"+srsId+","+(geo.getDimension()==2?"0":"1")+",0)";
-            if(colIdx==0) {
-	            addCreateLine(new Stmt(stmtGeomContents));
-			}
-			addCreateLine(new Stmt(stmtGeomCols));
-						
-			String dropstmtGeomContents=null;
-			if(colIdx==0) {
-	            dropstmtGeomContents="DELETE FROM gpkg_contents WHERE table_name=\'"+tab.getName().getName()+"\'";
-			}
-			String dropstmtGeomCols="DELETE FROM gpkg_geometry_columns WHERE table_name=\'"+tab.getName().getName()+"\' AND column_name=\'"+geo.getName()+"\'";
-			addDropLine(new Stmt(dropstmtGeomCols));
-            if(colIdx==0) {
-                addDropLine(new Stmt(dropstmtGeomContents));
-            }
-			if(conn!=null) {
-	            if(!tableExists){
-	                if(colIdx==0) {
-	                    EhiLogger.traceBackendCmd(stmtGeomContents);
-	                    totalScript.write(stmtGeomContents+";"+newline());
-	                }
-                    EhiLogger.traceBackendCmd(stmtGeomCols);
-                    totalScript.write(stmtGeomCols+";"+newline());
+	        //INSERT INTO gpkg_geometry_columns (table_name,column_name,geometry_type_name,srs_id,z,m) 
+	        //VALUES ('BoFlaeche' ,'Geometrie' ,'CURVEPOLYGON',21781,0,0);
+	        
+	        for(int colIdx=0;colIdx<geomColumns.size();colIdx++){
+	            DbColGeometry geo=geomColumns.get(colIdx);
+	            String srsId="(SELECT srs_id FROM gpkg_spatial_ref_sys WHERE organization=\'"+geo.getSrsAuth()+"\' AND organization_coordsys_id="+geo.getSrsId()+")";
+	            String cmt=tab.getComment()==null?"null":"\'"+tab.getComment()+"\'";
+	            String stmtGeomContents=null;
+	            if(colIdx==0) {
+	                stmtGeomContents="INSERT INTO gpkg_contents (table_name,data_type,identifier,description,last_change,min_x,min_y,max_x,max_y,srs_id)" 
+	                        +"VALUES (\'"+tab.getName().getName()+"\','"+GPKG_CONTENTS_DATA_TYPE_FEATURES+"',\'"+tab.getName().getName()+"\',"+cmt+",\'"+today+"\',"+geo.getMin1()+","+geo.getMin2()+","+geo.getMax1()+","+geo.getMax2()+","+srsId+")";
 	            }
-			}
+	            String stmtGeomCols="INSERT INTO gpkg_geometry_columns (table_name,column_name,geometry_type_name,srs_id,z,m)" 
+	            +"VALUES (\'"+tab.getName().getName()+"\',\'"+geo.getName()+"\' ,\'"+getGpkgGeometryTypename(geo.getType())+"\',"+srsId+","+(geo.getDimension()==2?"0":"1")+",0)";
+	            if(colIdx==0) {
+	                addCreateLine(new Stmt(stmtGeomContents));
+	            }
+	            addCreateLine(new Stmt(stmtGeomCols));
+	                        
+	            String dropstmtGeomContents=null;
+	            if(colIdx==0) {
+	                dropstmtGeomContents="DELETE FROM gpkg_contents WHERE table_name=\'"+tab.getName().getName()+"\'";
+	            }
+	            String dropstmtGeomCols="DELETE FROM gpkg_geometry_columns WHERE table_name=\'"+tab.getName().getName()+"\' AND column_name=\'"+geo.getName()+"\'";
+	            addDropLine(new Stmt(dropstmtGeomCols));
+	            if(colIdx==0) {
+	                addDropLine(new Stmt(dropstmtGeomContents));
+	            }
+	            if(conn!=null) {
+	                if(!tableExists){
+	                    if(colIdx==0) {
+	                        EhiLogger.traceBackendCmd(stmtGeomContents);
+	                        totalScript.write(stmtGeomContents+";"+newline());
+	                    }
+	                    EhiLogger.traceBackendCmd(stmtGeomCols);
+	                    totalScript.write(stmtGeomCols+";"+newline());
+	                }
+	            }
+	        }
 		}
 		geomColumns=null;
 		
