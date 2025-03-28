@@ -296,6 +296,16 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
             String stmtGeomContents=null;
             stmtGeomContents="INSERT INTO gpkg_contents (table_name,data_type,identifier,description,last_change)" 
                     +"VALUES (\'"+tab.getName().getName()+"\','"+GPKG_CONTENTS_DATA_TYPE_ATTRIBUTES+"',\'"+tab.getName().getName()+"\',"+cmt+",\'"+today+"\',"+")";
+            addCreateLine(new Stmt(stmtGeomContents));
+            String dropstmtGeomContents=null;
+            dropstmtGeomContents="DELETE FROM gpkg_contents WHERE table_name=\'"+tab.getName().getName()+"\'";
+            addDropLine(new Stmt(dropstmtGeomContents));
+            if(conn!=null) {
+                if(!tableExists){
+                    EhiLogger.traceBackendCmd(stmtGeomContents);
+                    totalScript.write(stmtGeomContents+";"+newline());
+                }
+            }
 		}else {
 	        //INSERT INTO gpkg_contents (table_name,data_type,identifier,description,last_change,min_x,min_y,max_x,max_y,srs_id) 
 	        //VALUES ('BoFlaeche','features','DM01.BoFlaeche','Beschreibung BoFlaeche','2016-01-01T08:19:32.000Z',580000.000,205000.000,660000.000,270000.000,21781)
