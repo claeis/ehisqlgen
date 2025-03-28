@@ -295,7 +295,7 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
             String cmt=tab.getComment()==null?"null":"\'"+tab.getComment()+"\'";
             String stmtGeomContents=null;
             stmtGeomContents="INSERT INTO gpkg_contents (table_name,data_type,identifier,description,last_change)" 
-                    +"VALUES (\'"+tab.getName().getName()+"\','"+GPKG_CONTENTS_DATA_TYPE_ATTRIBUTES+"',\'"+tab.getName().getName()+"\',"+cmt+",\'"+today+"\',"+")";
+                    +"VALUES (\'"+tab.getName().getName()+"\','"+GPKG_CONTENTS_DATA_TYPE_ATTRIBUTES+"',\'"+tab.getName().getName()+"\',"+cmt+",\'"+today+"\'"+")";
             addCreateLine(new Stmt(stmtGeomContents));
             String dropstmtGeomContents=null;
             dropstmtGeomContents="DELETE FROM gpkg_contents WHERE table_name=\'"+tab.getName().getName()+"\'";
