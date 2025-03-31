@@ -33,7 +33,8 @@ dependencies {
 repositories {
     mavenLocal()
     maven {
-        url "http://jars.interlis.ch"
+        //url "http://jars.interlis.ch"
+        url "https://jars.sogeo.services/interlis"
     }
     mavenCentral()
 }
