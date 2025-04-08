@@ -1,5 +1,5 @@
 group 'ch.ehi'
-version '1.16.1'+System.getProperty('release','-SNAPSHOT')
+version '1.16.2'+System.getProperty('release','-SNAPSHOT')
 
 apply plugin: "java"
 apply plugin: "maven"
@@ -34,6 +34,7 @@ repositories {
     mavenLocal()
     maven {
         url "http://jars.interlis.ch"
+        //url "https://jars.sogeo.services/interlis"
     }
     mavenCentral()
 }
