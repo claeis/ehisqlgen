@@ -11,7 +11,7 @@ branches:
     - stable
 
 addons:
-  postgresql: 13
+  postgresql: 12
   ssh_known_hosts:
   - ftp.interlis.ch
   apt:
@@ -20,14 +20,19 @@ addons:
 
 env:
   global:
-  - PGPORT=5432
-  - PGUSER=travis
+  - PGPORT=5433
+  - PGUSER=postgres
 
 install: true
   
 before_script:
     - # show port used by different installed versions
     - grep port /etc/postgresql/*/main/postgresql.conf
+    - # enable same access rules in new installed version 12 as in pre-installed version 13
+    - sudo cp /etc/postgresql/13/main/pg_hba.conf /etc/postgresql/12/main/pg_hba.conf
+    - # restart postgresql because of changes to pg_hba.conf
+    - sudo service postgresql stop
+    - sudo service postgresql start 12
     - psql -c 'create database ehisqlgen;' -U $PGUSER
     - psql -c 'select version();' -d ehisqlgen -U $PGUSER
     - psql -c 'create extension postgis;' -d ehisqlgen -U $PGUSER
