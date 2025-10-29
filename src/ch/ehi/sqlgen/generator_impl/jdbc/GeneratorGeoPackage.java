@@ -292,7 +292,7 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 		
 		if(geomColumns.size()==0) {
 		    
-            String cmt=tab.getComment()==null?"null":"\'"+tab.getComment()+"\'";
+            String cmt=tab.getComment()==null?"null":"\'"+escapeString(tab.getComment())+"\'";
             String stmtGeomContents=null;
             stmtGeomContents="INSERT INTO gpkg_contents (table_name,data_type,identifier,description,last_change)" 
                     +"VALUES (\'"+tab.getName().getName()+"\','"+GPKG_CONTENTS_DATA_TYPE_ATTRIBUTES+"',\'"+tab.getName().getName()+"\',"+cmt+",\'"+today+"\'"+")";
@@ -316,7 +316,7 @@ public class GeneratorGeoPackage extends GeneratorJdbc {
 	        for(int colIdx=0;colIdx<geomColumns.size();colIdx++){
 	            DbColGeometry geo=geomColumns.get(colIdx);
 	            String srsId="(SELECT srs_id FROM gpkg_spatial_ref_sys WHERE organization=\'"+geo.getSrsAuth()+"\' AND organization_coordsys_id="+geo.getSrsId()+")";
-	            String cmt=tab.getComment()==null?"null":"\'"+tab.getComment()+"\'";
+	            String cmt=tab.getComment()==null?"null":"\'"+escapeString(tab.getComment())+"\'";
 	            String stmtGeomContents=null;
 	            if(colIdx==0) {
 	                stmtGeomContents="INSERT INTO gpkg_contents (table_name,data_type,identifier,description,last_change,min_x,min_y,max_x,max_y,srs_id)" 
