@@ -20,8 +20,8 @@ addons:
 
 env:
   global:
-  - PGPORT=5433
-  - PGUSER=postgres
+  - PGPORT=5432
+  - PGUSER=travis
 
 install: true
   
