@@ -1,3 +1,5 @@
+dist: focal
+
 language: java
 
 jdk:
@@ -9,22 +11,31 @@ branches:
     - stable
 
 addons:
-  postgresql: "9.6"
+  postgresql: 13
+  ssh_known_hosts:
+  - ftp.interlis.ch
   apt:
     packages:
-    - postgresql-9.6-postgis-2.4
+    - postgresql-postgis
+
+env:
+  global:
+  - PGPORT=5433
+  - PGUSER=postgres
 
 install: true
   
 before_script:
-    - psql -c 'create database ehisqlgen;' -U postgres
-    - psql -c 'select version();' -d ehisqlgen -U postgres
-    - psql -c 'create extension postgis;' -d ehisqlgen -U postgres
-    - psql -c 'create extension "uuid-ossp";' -d ehisqlgen -U postgres
-    - psql -c 'select postgis_full_version();' -d ehisqlgen -U postgres
+    - # show port used by different installed versions
+    - grep port /etc/postgresql/*/main/postgresql.conf
+    - psql -c 'create database ehisqlgen;' -U $PGUSER
+    - psql -c 'select version();' -d ehisqlgen -U $PGUSER
+    - psql -c 'create extension postgis;' -d ehisqlgen -U $PGUSER
+    - psql -c 'create extension "uuid-ossp";' -d ehisqlgen -U $PGUSER
+    - psql -c 'select postgis_full_version();' -d ehisqlgen -U $PGUSER
   
 script: 
-  - ./gradlew  -Ddburl=jdbc:postgresql:ehisqlgen -Ddbusr=postgres build 
+  - ./gradlew  -Ddburl=jdbc:postgresql://127.0.0.1:$PGPORT/ehisqlgen -Ddbusr=$PGUSER build 
 after_failure:
   - cat  build/junitreport/TEST-*.txt
 deploy:
