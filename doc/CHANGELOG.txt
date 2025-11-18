@@ -1,4 +1,4 @@
-ehisqlgen 1.16.3 (2025-04-xx)
+ehisqlgen 1.16.3 (2025-11-18)
 -----------------------------
 - GPKG: escape table-comment string (ili2db#574)
 
