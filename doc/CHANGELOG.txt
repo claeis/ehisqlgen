@@ -1,3 +1,7 @@
+ehisqlgen 1.16.3 (2025-11-18)
+-----------------------------
+- GPKG: escape table-comment string (ili2db#574)
+
 ehisqlgen 1.16.2 (2025-04-08)
 -----------------------------
 - GPKG: create gpkg_contents entry for attributes tables (ili2db#560)
